@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b0e14;
+  --foreground: #e6edf3;
+  --crimson: #ff2a2a;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.glow-crimson {
+  text-shadow: 0 0 10px rgba(255, 42, 42, 0.7), 0 0 20px rgba(255, 42, 42, 0.4);
+}
+
+.border-crimson-glow {
+  box-shadow: 0 0 15px rgba(255, 42, 42, 0.2);
+  border: 1px solid rgba(255, 42, 42, 0.4);
+}
