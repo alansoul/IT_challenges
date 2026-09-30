@@ -78,12 +78,12 @@ export const submitFlag = async (req, res) => {
     // Award solve count to challenge statistics
     await Challenge.findByIdAndUpdate(challenge._id, { $inc: { solvesCount: 1 } });
 
-    // Update Redis Leaderboard with millisecond tie-breaker
-    if (redis && redis.status === 'ready') {
-      const tieBreaker = 1 - Date.now() / 1e13;
-      const redisScore = updatedUser.score + tieBreaker;
-      await redis.zadd('leaderboard', redisScore, userId.toString());
-    }
+    // Issue #8: only players enter the public leaderboard (never admins)
+if (redis && redis.status === 'ready' && updatedUser.role === 'player') {
+  const tieBreaker = 1 - Date.now() / 1e13;
+  const redisScore = updatedUser.score + tieBreaker;
+  await redis.zadd('leaderboard', redisScore, userId.toString());
+}
 
     return res.json({
       success: true,

@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
-import { Terminal, Trophy, CheckCircle2, Search } from 'lucide-react';
+import { Terminal, Trophy, CheckCircle2, Search, GraduationCap, ShieldCheck, Award } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import axios from 'axios';
 import api from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 interface Challenge {
   _id: string;
@@ -29,13 +30,13 @@ const categories = ['All', 'Web', 'Pwn', 'Crypto', 'Forensics', 'Rev', 'OSINT', 
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { user, loading: authLoading, refreshUser } = useAuth();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [flags, setFlags] = useState<Record<string, string>>({});
   const [statusMsg, setStatusMsg] = useState<Record<string, string>>({});
-  const [isAuthChecking, setIsAuthChecking] = useState(true);
 
   const fetchChallenges = useCallback(async () => {
     try {
@@ -55,21 +56,20 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Protect route & defer state update out of synchronous effect execution
   useEffect(() => {
     const timer = setTimeout(() => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-      } else {
-        setIsAuthChecking(false);
-        void fetchChallenges();
-        void fetchLeaderboard();
+      if (!authLoading) {
+        if (!user) {
+          router.push('/login');
+        } else {
+          void fetchChallenges();
+          void fetchLeaderboard();
+        }
       }
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [router, fetchChallenges, fetchLeaderboard]);
+  }, [user, authLoading, router, fetchChallenges, fetchLeaderboard]);
 
   const submitFlag = async (challengeId: string) => {
     const flag = flags[challengeId];
@@ -84,6 +84,7 @@ export default function DashboardPage() {
       setStatusMsg((prev) => ({ ...prev, [challengeId]: res.data.message }));
       confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
 
+      await refreshUser();
       await fetchChallenges();
       await fetchLeaderboard();
     } catch (err: unknown) {
@@ -103,10 +104,12 @@ export default function DashboardPage() {
     return matchesCat && matchesSearch;
   });
 
-  if (isAuthChecking) {
+  const solvedCount = challenges.filter((c) => c.isSolved).length;
+
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-[#07090e] flex items-center justify-center text-gray-500 font-mono text-sm">
-        Authenticating clearance...
+        Verifying clearance session...
       </div>
     );
   }
@@ -115,9 +118,59 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#07090e] text-[#f0f6fc]">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Controls: Search & Category Filter */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {/* DETECTIVE DOSSIER PROFILE HEADER */}
+        {user && (
+          <div className="relative overflow-hidden bg-linear-to-r from-[#160b2b] via-[#0f131a] to-[#160b2b] border border-[#21262d] rounded-2xl p-6 shadow-2xl">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              {/* User Identity */}
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-[#ff2a2a] text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-red-950/60 border border-red-400/40">
+                  {user.name.charAt(0)}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-black text-white tracking-tight">{user.name}</h1>
+                    <span className="bg-red-500/10 border border-red-500/30 text-[#ff2a2a] text-[10px] uppercase font-mono px-2 py-0.5 rounded font-bold">
+                      {user.role}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 font-mono mt-0.5">{user.email}</p>
+
+                  {/* Branch & Seniority Badges */}
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <span className="inline-flex items-center gap-1 bg-[#1c212a] border border-[#30363d] text-gray-300 text-xs px-2.5 py-0.5 rounded-full font-medium">
+                      <GraduationCap className="w-3.5 h-3.5 text-purple-400" /> {user.branch}
+                    </span>
+                    <span className="inline-flex items-center gap-1 bg-[#1c212a] border border-[#30363d] text-gray-300 text-xs px-2.5 py-0.5 rounded-full font-medium">
+                      <ShieldCheck className="w-3.5 h-3.5 text-green-400" /> {user.batchYear}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Solves and Score Statistics */}
+              <div className="flex items-center gap-6 bg-[#07090e]/80 border border-[#21262d] px-6 py-4 rounded-xl">
+                <div>
+                  <p className="text-[11px] text-gray-400 uppercase tracking-wider font-mono">Bounty Score</p>
+                  <p className="text-2xl font-black text-[#ff2a2a] font-mono glow-crimson">{user.score} pts</p>
+                </div>
+                <div className="h-10 w-px bg-[#21262d]" />
+                <div>
+                  <p className="text-[11px] text-gray-400 uppercase tracking-wider font-mono">Progress</p>
+                  <p className="text-2xl font-black text-green-400 font-mono flex items-center gap-1.5">
+                    <Award className="w-5 h-5 text-yellow-400" /> {solvedCount} / 27
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Filter and Search */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex flex-wrap gap-1.5 bg-[#0f131a] p-1.5 rounded-lg border border-[#21262d] w-full md:w-auto">
             {categories.map((cat) => (
               <button
@@ -146,13 +199,13 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Challenges & Live Leaderboard Grid */}
+        {/* Main Grid: Challenges + Live Leaderboard */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* 27 Challenges */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex justify-between items-center mb-2">
               <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
-                <Terminal className="text-[#ff2a2a] w-4 h-4" /> Evidence Nodes ({filteredChallenges.length} Active)
+                <Terminal className="text-[#ff2a2a] w-4 h-4" /> Active Investigation Nodes ({filteredChallenges.length})
               </h2>
             </div>
 
@@ -215,7 +268,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Live Leaderboard Sidebar */}
+          {/* Live Leaderboard */}
           <div className="bg-[#0f131a] border border-[#21262d] p-5 rounded-lg h-fit space-y-4">
             <h2 className="text-sm font-bold tracking-wider text-gray-200 flex items-center gap-2">
               <Trophy className="text-yellow-400 w-4 h-4" /> LIVE LEADERBOARD
@@ -231,7 +284,17 @@ export default function DashboardPage() {
                     className="flex justify-between items-center p-2 rounded bg-[#07090e] border border-[#1c212a]"
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className={`text-xs font-bold w-5 ${idx === 0 ? 'text-yellow-400' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-amber-600' : 'text-gray-500'}`}>
+                      <span
+                        className={`text-xs font-bold w-5 ${
+                          idx === 0
+                            ? 'text-yellow-400'
+                            : idx === 1
+                            ? 'text-gray-300'
+                            : idx === 2
+                            ? 'text-amber-600'
+                            : 'text-gray-500'
+                        }`}
+                      >
                         #{idx + 1}
                       </span>
                       <span className="text-xs font-medium text-gray-200">{player.name}</span>

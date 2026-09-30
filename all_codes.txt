@@ -1,0 +1,2858 @@
+================ PROJECT STRUCTURE ================
+
+📂 client
+  📄 AGENTS.md
+  📄 CLAUDE.md
+  📄 eslint.config.mjs
+  📄 next-env.d.ts
+  📄 next.config.ts
+  📄 package.json
+  📄 postcss.config.mjs
+  📄 README.md
+  📂 src
+    📂 app
+      📂 dashboard
+        📄 page.tsx
+      📄 globals.css
+      📄 layout.tsx
+      📂 login
+        📄 page.tsx
+      📄 page.tsx
+      📂 register
+        📄 page.tsx
+    📂 components
+      📄 Navbar.tsx
+    📂 context
+      📄 AuthContext.tsx
+    📂 lib
+      📄 api.ts
+  📄 tsconfig.json
+📂 server
+  📄 .env.example
+  📄 package.json
+  📂 src
+    📂 config
+      📄 cloudinary.js
+      📄 db.js
+      📄 redis.js
+    📂 controllers
+      📄 authController.js
+      📄 challengeController.js
+      📄 leaderboardController.js
+    📂 middlewares
+      📄 adminOnly.js
+      📄 auth.js
+      📄 errorHandler.js
+      📄 loginLimiter.js
+      📄 rateLimiter.js
+      📄 validate.js
+    📂 models
+      📄 Challenge.js
+      📄 Submission.js
+      📄 User.js
+    📂 routes
+      📄 authRoutes.js
+      📄 challengeRoutes.js
+      📄 leaderboardRoutes.js
+    📄 server.js
+    📂 utils
+      📄 asyncHandler.js
+      📄 collegeValidator.js
+      📄 flagHasher.js
+      📄 seed.js
+      📄 validators.js
+
+
+================ SOURCE CODES ================
+
+
+================================================================================
+FILE: client\AGENTS.md
+================================================================================
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
+
+
+
+================================================================================
+FILE: client\CLAUDE.md
+================================================================================
+
+@AGENTS.md
+
+
+
+================================================================================
+FILE: client\eslint.config.mjs
+================================================================================
+
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+
+
+
+================================================================================
+FILE: client\next-env.d.ts
+================================================================================
+
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+import "./.next/dev/types/routes.d.ts";
+import "./.next/dev/types/root-params.d.ts";
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+
+
+
+================================================================================
+FILE: client\next.config.ts
+================================================================================
+
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+
+
+
+================================================================================
+FILE: client\package.json
+================================================================================
+
+{
+  "name": "client",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@react-oauth/google": "^0.13.5",
+    "axios": "^1.20.0",
+    "canvas-confetti": "^1.9.4",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.48.0",
+    "next": "16.3.6",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "tailwind-merge": "^3.7.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+
+
+
+================================================================================
+FILE: client\postcss.config.mjs
+================================================================================
+
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;
+
+
+
+================================================================================
+FILE: client\README.md
+================================================================================
+
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+
+================================================================================
+FILE: client\src\app\dashboard\page.tsx
+================================================================================
+
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import Navbar from '@/components/Navbar';
+import { Terminal, Trophy, CheckCircle2, Search, GraduationCap, ShieldCheck, Award } from 'lucide-react';
+import confetti from 'canvas-confetti';
+import axios from 'axios';
+import api from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
+
+interface Challenge {
+  _id: string;
+  title: string;
+  category: string;
+  difficultyRank: number;
+  points: number;
+  description: string;
+  isSolved: boolean;
+}
+
+interface LeaderboardUser {
+  _id: string;
+  name: string;
+  score: number;
+  email: string;
+}
+
+const categories = ['All', 'Web', 'Pwn', 'Crypto', 'Forensics', 'Rev', 'OSINT', 'Misc'];
+
+export default function DashboardPage() {
+  const router = useRouter();
+  const { user, loading: authLoading, refreshUser } = useAuth();
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [flags, setFlags] = useState<Record<string, string>>({});
+  const [statusMsg, setStatusMsg] = useState<Record<string, string>>({});
+
+  const fetchChallenges = useCallback(async () => {
+    try {
+      const res = await api.get<Challenge[]>('/api/challenges');
+      setChallenges(res.data);
+    } catch (err: unknown) {
+      console.error('Failed to load challenges:', err);
+    }
+  }, []);
+
+  const fetchLeaderboard = useCallback(async () => {
+    try {
+      const res = await api.get<LeaderboardUser[]>('/api/leaderboard');
+      setLeaderboard(res.data);
+    } catch (err: unknown) {
+      console.error('Failed to load leaderboard:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!authLoading) {
+        if (!user) {
+          router.push('/login');
+        } else {
+          void fetchChallenges();
+          void fetchLeaderboard();
+        }
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [user, authLoading, router, fetchChallenges, fetchLeaderboard]);
+
+  const submitFlag = async (challengeId: string) => {
+    const flag = flags[challengeId];
+    if (!flag) return;
+
+    try {
+      const res = await api.post<{ message: string; newScore: number }>(
+        `/api/challenges/${challengeId}/submit`,
+        { flag }
+      );
+
+      setStatusMsg((prev) => ({ ...prev, [challengeId]: res.data.message }));
+      confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+
+      await refreshUser();
+      await fetchChallenges();
+      await fetchLeaderboard();
+    } catch (err: unknown) {
+      const errorMsg = axios.isAxiosError(err)
+        ? (err.response?.data?.message as string) || 'Wrong flag!'
+        : 'Submission error';
+
+      setStatusMsg((prev) => ({ ...prev, [challengeId]: errorMsg }));
+    }
+  };
+
+  const filteredChallenges = challenges.filter((ch) => {
+    const matchesCat = selectedCategory === 'All' || ch.category === selectedCategory;
+    const matchesSearch =
+      ch.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ch.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCat && matchesSearch;
+  });
+
+  const solvedCount = challenges.filter((c) => c.isSolved).length;
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#07090e] flex items-center justify-center text-gray-500 font-mono text-sm">
+        Verifying clearance session...
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#07090e] text-[#f0f6fc]">
+      <Navbar />
+
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {/* DETECTIVE DOSSIER PROFILE HEADER */}
+        {user && (
+          <div className="relative overflow-hidden bg-linear-to-r from-[#160b2b] via-[#0f131a] to-[#160b2b] border border-[#21262d] rounded-2xl p-6 shadow-2xl">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              {/* User Identity */}
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-[#ff2a2a] text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-red-950/60 border border-red-400/40">
+                  {user.name.charAt(0)}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-black text-white tracking-tight">{user.name}</h1>
+                    <span className="bg-red-500/10 border border-red-500/30 text-[#ff2a2a] text-[10px] uppercase font-mono px-2 py-0.5 rounded font-bold">
+                      {user.role}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 font-mono mt-0.5">{user.email}</p>
+
+                  {/* Branch & Seniority Badges */}
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <span className="inline-flex items-center gap-1 bg-[#1c212a] border border-[#30363d] text-gray-300 text-xs px-2.5 py-0.5 rounded-full font-medium">
+                      <GraduationCap className="w-3.5 h-3.5 text-purple-400" /> {user.branch}
+                    </span>
+                    <span className="inline-flex items-center gap-1 bg-[#1c212a] border border-[#30363d] text-gray-300 text-xs px-2.5 py-0.5 rounded-full font-medium">
+                      <ShieldCheck className="w-3.5 h-3.5 text-green-400" /> {user.batchYear}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Solves and Score Statistics */}
+              <div className="flex items-center gap-6 bg-[#07090e]/80 border border-[#21262d] px-6 py-4 rounded-xl">
+                <div>
+                  <p className="text-[11px] text-gray-400 uppercase tracking-wider font-mono">Bounty Score</p>
+                  <p className="text-2xl font-black text-[#ff2a2a] font-mono glow-crimson">{user.score} pts</p>
+                </div>
+                <div className="h-10 w-px bg-[#21262d]" />
+                <div>
+                  <p className="text-[11px] text-gray-400 uppercase tracking-wider font-mono">Progress</p>
+                  <p className="text-2xl font-black text-green-400 font-mono flex items-center gap-1.5">
+                    <Award className="w-5 h-5 text-yellow-400" /> {solvedCount} / 27
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Filter and Search */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex flex-wrap gap-1.5 bg-[#0f131a] p-1.5 rounded-lg border border-[#21262d] w-full md:w-auto">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded transition ${
+                  selectedCategory === cat
+                    ? 'bg-[#ff2a2a] text-white'
+                    : 'text-gray-400 hover:text-white hover:bg-[#161b22]'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative w-full md:w-72">
+            <Search className="w-4 h-4 text-gray-500 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              placeholder="Search evidence node..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#0f131a] border border-[#21262d] rounded-lg pl-9 pr-3 py-1.5 text-xs font-mono focus:outline-none focus:border-[#ff2a2a]"
+            />
+          </div>
+        </div>
+
+        {/* Main Grid: Challenges + Live Leaderboard */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* 27 Challenges */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                <Terminal className="text-[#ff2a2a] w-4 h-4" /> Active Investigation Nodes ({filteredChallenges.length})
+              </h2>
+            </div>
+
+            {filteredChallenges.length === 0 ? (
+              <div className="p-8 text-center bg-[#0f131a] border border-[#21262d] rounded-lg text-gray-500 text-xs font-mono">
+                No matching investigation nodes found.
+              </div>
+            ) : (
+              filteredChallenges.map((ch) => (
+                <div
+                  key={ch._id}
+                  className={`p-5 rounded-lg border transition ${
+                    ch.isSolved
+                      ? 'border-green-600/40 bg-[#0a1811]'
+                      : 'border-[#21262d] bg-[#0f131a] hover:border-[#38414e]'
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <span className="text-[10px] font-mono uppercase bg-[#1c212a] px-2 py-0.5 rounded text-gray-300 mr-2">
+                        {ch.category}
+                      </span>
+                      <span className="text-xs font-mono text-gray-500">Rank #{ch.difficultyRank}</span>
+                      <h3 className="text-base font-bold mt-1 text-white">{ch.title}</h3>
+                    </div>
+                    <span className="text-xs font-bold text-[#ff2a2a] bg-[#ff2a2a]/10 px-3 py-1 rounded-full border border-[#ff2a2a]/20">
+                      {ch.points} pts
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-gray-400 mb-4 leading-relaxed">{ch.description}</p>
+
+                  {ch.isSolved ? (
+                    <div className="flex items-center gap-2 text-green-400 text-xs font-semibold">
+                      <CheckCircle2 className="w-4 h-4" /> Node Solved & Verified
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="CTF{...}"
+                        className="bg-[#07090e] border border-[#21262d] rounded px-3 py-1.5 text-xs flex-1 font-mono focus:outline-none focus:border-[#ff2a2a]"
+                        value={flags[ch._id] || ''}
+                        onChange={(e) => setFlags({ ...flags, [ch._id]: e.target.value })}
+                      />
+                      <button
+                        onClick={() => submitFlag(ch._id)}
+                        className="bg-[#ff2a2a] hover:bg-red-700 text-white font-bold px-4 py-1.5 rounded text-xs transition"
+                      >
+                        Submit Flag
+                      </button>
+                    </div>
+                  )}
+
+                  {statusMsg[ch._id] && (
+                    <p className="text-[11px] mt-2 text-yellow-400 font-mono">{statusMsg[ch._id]}</p>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Live Leaderboard */}
+          <div className="bg-[#0f131a] border border-[#21262d] p-5 rounded-lg h-fit space-y-4">
+            <h2 className="text-sm font-bold tracking-wider text-gray-200 flex items-center gap-2">
+              <Trophy className="text-yellow-400 w-4 h-4" /> LIVE LEADERBOARD
+            </h2>
+
+            <div className="space-y-2">
+              {leaderboard.length === 0 ? (
+                <p className="text-xs text-gray-500 italic">No solves recorded yet.</p>
+              ) : (
+                leaderboard.map((player, idx) => (
+                  <div
+                    key={player._id || idx}
+                    className="flex justify-between items-center p-2 rounded bg-[#07090e] border border-[#1c212a]"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className={`text-xs font-bold w-5 ${
+                          idx === 0
+                            ? 'text-yellow-400'
+                            : idx === 1
+                            ? 'text-gray-300'
+                            : idx === 2
+                            ? 'text-amber-600'
+                            : 'text-gray-500'
+                        }`}
+                      >
+                        #{idx + 1}
+                      </span>
+                      <span className="text-xs font-medium text-gray-200">{player.name}</span>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-[#ff2a2a]">{player.score} pts</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+
+================================================================================
+FILE: client\src\app\globals.css
+================================================================================
+
+@import "tailwindcss";
+
+:root {
+  --background: #0b0e14;
+  --foreground: #e6edf3;
+  --crimson: #ff2a2a;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.glow-crimson {
+  text-shadow: 0 0 10px rgba(255, 42, 42, 0.7), 0 0 20px rgba(255, 42, 42, 0.4);
+}
+
+.border-crimson-glow {
+  box-shadow: 0 0 15px rgba(255, 42, 42, 0.2);
+  border: 1px solid rgba(255, 42, 42, 0.4);
+}
+
+
+================================================================================
+FILE: client\src\app\layout.tsx
+================================================================================
+
+import type { Metadata } from 'next';
+import './globals.css';
+import { AuthProvider } from '@/context/AuthContext';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
+export const metadata: Metadata = {
+  title: 'Murder Mystery 2.0 | Cipher Cell CTF',
+  description: 'College Cybersecurity Club CTF Tournament',
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+
+  return (
+    <html lang="en">
+      <body className="antialiased">
+        <GoogleOAuthProvider clientId={googleClientId}>
+          <AuthProvider>{children}</AuthProvider>
+        </GoogleOAuthProvider>
+      </body>
+    </html>
+  );
+}
+
+
+================================================================================
+FILE: client\src\app\login\page.tsx
+================================================================================
+
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import {
+  ShieldAlert,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  AlertCircle,
+} from 'lucide-react';
+import axios from 'axios';
+import { GoogleLogin } from '@react-oauth/google';
+import { useAuth } from '@/context/AuthContext';
+
+export default function LoginPage() {
+  const { login, googleLogin } = useAuth();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg(null);
+
+    try {
+      await login(email, password);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setErrorMsg(err.response?.data?.message || 'Invalid email or password.');
+      } else {
+        setErrorMsg('Server connection failed.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-[#06080c] flex items-center justify-center p-4 sm:p-6 lg:p-10 font-sans">
+      <div className="w-full max-w-4xl min-h-135 bg-[#0c1017] border border-[#21262d] rounded-2xl overflow-hidden shadow-2xl grid grid-cols-1 lg:grid-cols-12 relative">
+        {/* Left */}
+        <div className="lg:col-span-5 relative bg-linear-to-b from-[#2e0854] via-[#160b2b] to-[#0c1017] p-8 sm:p-10 flex flex-col justify-between overflow-hidden border-b lg:border-b-0 lg:border-r border-[#21262d]">
+          <div className="absolute top-10 left-10 w-72 h-72 bg-purple-600/30 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-red-600/20 border border-red-500/40 flex items-center justify-center">
+              <ShieldAlert className="w-5 h-5 text-[#ff2a2a]" />
+            </div>
+            <div>
+              <span className="font-extrabold text-sm tracking-wider text-white">CIPHER CELL CTF</span>
+              <span className="text-[10px] block text-purple-300/70 font-mono tracking-widest uppercase">
+                MURDER MYSTERY 2.0
+              </span>
+            </div>
+          </div>
+
+          <div className="relative z-10 my-8 space-y-3">
+            <h2 className="text-3xl font-black text-white leading-tight">
+              Detective <br />
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-red-400 to-purple-400">
+                Sign In
+              </span>
+            </h2>
+            <p className="text-xs text-purple-200/70 leading-relaxed">
+              Authenticate with your IIIT-NR credentials or university Google account.
+            </p>
+          </div>
+
+          <div className="relative z-10 text-[11px] text-purple-300/50 font-mono">
+            Secure HttpOnly Cookie Session
+          </div>
+        </div>
+
+        {/* Right */}
+        <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-center max-w-md mx-auto w-full">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-white tracking-tight">Access Terminal</h1>
+            <p className="text-xs text-gray-400 mt-1">
+              Need an account?{' '}
+              <Link href="/register" className="text-[#ff2a2a] hover:underline font-semibold">
+                Register here
+              </Link>
+            </p>
+          </div>
+
+          {errorMsg && (
+            <div className="mb-4 p-3 bg-red-950/60 border border-red-800 text-red-300 text-xs rounded-lg flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                University Email <span className="text-[#ff2a2a]">(@iiitnr.edu.in)</span>
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-gray-500 absolute left-3.5 top-3" />
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. yourname@iiitnr.edu.in"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-[#121721] border border-[#21262d] rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#ff2a2a] transition font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1.5">Password</label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-gray-500 absolute left-3.5 top-3" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-[#121721] border border-[#21262d] rounded-xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#ff2a2a] transition font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-3 text-gray-500 hover:text-gray-300"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-2 bg-[#ff2a2a] hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-lg shadow-red-950/40 disabled:opacity-50"
+            >
+              {loading ? (
+                'Authenticating...'
+              ) : (
+                <>
+                  Sign In to Investigation <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Google SSO */}
+          <div className="mt-6 flex flex-col items-center gap-4">
+            <div className="flex items-center w-full gap-4">
+              <div className="flex-1 h-px bg-[#21262d]" />
+              <span className="text-xs text-gray-500 font-mono">OR IDENTIFY VIA</span>
+              <div className="flex-1 h-px bg-[#21262d]" />
+            </div>
+
+            <div className="flex justify-center w-full">
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  if (!credentialResponse.credential) return;
+                  setLoading(true);
+                  setErrorMsg(null);
+                  try {
+                    await googleLogin(credentialResponse.credential);
+                  } catch (err: unknown) {
+                    if (axios.isAxiosError(err)) {
+                      setErrorMsg(err.response?.data?.message || 'Google auth failed.');
+                    } else {
+                      setErrorMsg('Google auth failed.');
+                    }
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                onError={() => setErrorMsg('Google login was cancelled or failed.')}
+                theme="filled_black"
+                shape="pill"
+                text="continue_with"
+                size="large"
+              />
+            </div>
+
+            <p className="text-[10px] text-gray-500 text-center font-mono">
+              Only @iiitnr.edu.in Google accounts are accepted
+            </p>
+          </div>
+
+          <div className="mt-8 pt-4 border-t border-[#1c212a] text-center">
+            <Link href="/" className="text-[11px] text-gray-500 hover:text-gray-300 transition">
+              ← Return to Case Briefing & Suspects
+            </Link>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+
+================================================================================
+FILE: client\src\app\page.tsx
+================================================================================
+
+'use client';
+
+import Link from 'next/link';
+import Navbar from '@/components/Navbar';
+import { Skull, ArrowRight, UserCheck, CheckCircle2 } from 'lucide-react';
+
+const suspects = [
+  { initial: 'B', name: 'Bhavyaa', role: 'Head of Club', note: 'Always analyzing detective novels. Seen hovering near server room.' },
+  { initial: 'O', name: 'Onkar', role: 'Vice Head', note: 'Complained about being stressed. Missing during time of murder.' },
+  { initial: 'H', name: 'Harimohan', role: 'Core Member', note: 'Caught trying to bypass electronic server locks yesterday.' },
+  { initial: 'A', name: 'Arjun', role: 'Core Member', note: 'Fits the suspect profile. His alibi for the night is shaky.' },
+  { initial: 'S', name: 'Surya', role: 'Core Member', note: 'The ECE network sniffer. Knows exactly when CCTV went down.' },
+  { initial: 'S', name: 'Shivali', role: 'Core Member', note: 'Fascinated by true crime. Was seen carrying a suspiciously large bag.' },
+  { initial: 'R', name: 'Rudra', role: 'Member', note: 'Learning fast. Always asking suspiciously specific security questions.' },
+];
+
+export default function LandingPage() {
+  return (
+    <div className="min-h-screen bg-[#07090e] text-[#f0f6fc]">
+      <Navbar />
+
+      <main className="max-w-7xl mx-auto px-6 py-12 space-y-16">
+        <section className="text-center space-y-6 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 bg-red-950/40 border border-red-800/40 px-3 py-1 rounded-full text-xs font-mono text-red-400">
+            <Skull className="w-3.5 h-3.5" /> MURDER INVESTIGATION IN PROGRESS
+          </div>
+
+          <h1 className="text-5xl sm:text-6xl font-black tracking-widest text-[#ff2a2a] glow-crimson uppercase">
+            Murder Mystery 2.0
+          </h1>
+
+          <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
+            A catastrophic breach has occurred at the college. The victim,{' '}
+            <span className="text-white font-bold">Mr. Bedekar</span>, was found murdered in the
+            club&apos;s server room! 27 encrypted evidence nodes remain across 7 categories.
+          </p>
+
+          <div className="pt-4 flex justify-center gap-4 flex-wrap">
+            <Link
+              href="/dashboard"
+              className="bg-[#ff2a2a] hover:bg-red-700 text-white font-bold px-6 py-3 rounded-lg text-sm transition flex items-center gap-2 shadow-xl shadow-red-950/50"
+            >
+              Enter Investigation Dashboard <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/register"
+              className="border border-[#30363d] hover:border-[#ff2a2a]/50 text-gray-200 font-bold px-6 py-3 rounded-lg text-sm transition"
+            >
+              Register Detective Account
+            </Link>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-[#0f131a] border border-[#21262d] rounded-xl p-6 space-y-4">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <span className="text-[#ff2a2a]">/</span> The Premise
+            </h2>
+            <p className="text-sm text-gray-400 leading-relaxed">
+              You are a rookie detective tasked with finding the killer among the club members. You
+              must crack the 27 cryptographic, binary, and forensic challenges left across the crime
+              scene.
+            </p>
+            <div className="bg-[#07090e] border border-[#1c212a] p-3 rounded font-mono text-xs text-red-400">
+              Flag Format: <span className="text-white font-bold">CTF&#123;...&#125;</span>
+            </div>
+          </div>
+
+          <div className="bg-[#0f131a] border border-[#21262d] rounded-xl p-6 space-y-4">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <span className="text-[#ff2a2a]">!</span> Contest Rules & Scoring
+            </h2>
+            <ul className="text-xs text-gray-400 space-y-2.5">
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                <span>
+                  <strong>College Email Only:</strong> Must authenticate with university credentials
+                  or Google (@iiitnr.edu.in).
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                <span>
+                  <strong>27 Investigation Nodes:</strong> Points scale from 100 pts up to 1,000 pts
+                  (Kernel/SSRF).
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Tie-Breaker:</strong> Earliest solver ranks higher via Redis millisecond
+                  precision.
+                </span>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section className="space-y-6">
+          <h2 className="text-xl font-bold tracking-wider text-gray-200 flex items-center gap-2">
+            <UserCheck className="text-[#ff2a2a] w-5 h-5" /> The Cast (Suspects)
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {suspects.map((sus, idx) => (
+              <div
+                key={idx}
+                className="bg-[#0f131a] border border-[#21262d] p-5 rounded-lg space-y-3 relative group hover:border-red-900 transition"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded bg-[#161b22] border border-[#30363d] flex items-center justify-center font-bold text-lg text-[#ff2a2a]">
+                    {sus.initial}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white">{sus.name}</h3>
+                    <p className="text-[10px] text-gray-400 uppercase font-mono">{sus.role}</p>
+                  </div>
+                </div>
+                <div className="bg-[#07090e] p-2.5 rounded border border-[#1c212a] text-[11px] text-gray-400 leading-snug">
+                  {sus.note}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+
+================================================================================
+FILE: client\src\app\register\page.tsx
+================================================================================
+
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import {
+  ShieldAlert,
+  Mail,
+  Lock,
+  User as UserIcon,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  AlertCircle,
+  CheckCircle2,
+} from 'lucide-react';
+import axios from 'axios';
+import { GoogleLogin } from '@react-oauth/google';
+import { useAuth } from '@/context/AuthContext';
+
+export default function RegisterPage() {
+  const { register, googleLogin } = useAuth();
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [branch, setBranch] = useState('CSE');
+  const [batchYear, setBatchYear] = useState('1st Year (Freshers)');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const isIIITNREmail =
+    email.toLowerCase().endsWith('@iiitnr.edu.in') ||
+    email.toLowerCase().endsWith('@iiitnr.ac.in');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg(null);
+
+    if (!isIIITNREmail) {
+      setLoading(false);
+      setErrorMsg('University restriction: Email must end with @iiitnr.edu.in');
+      return;
+    }
+
+    if (password.length < 8) {
+      setLoading(false);
+      setErrorMsg('Password must be at least 8 characters.');
+      return;
+    }
+
+    try {
+      await register(name, email, password, branch, batchYear);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const data = err.response?.data as
+          | { message?: string; errors?: Array<{ message: string }> }
+          | undefined;
+
+        if (data?.errors?.length) {
+          setErrorMsg(data.errors.map((e) => e.message).join(', '));
+        } else {
+          setErrorMsg(data?.message || 'Registration failed.');
+        }
+      } else {
+        setErrorMsg('Server connection failed.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-[#06080c] flex items-center justify-center p-4 sm:p-6 lg:p-10 font-sans">
+      <div className="w-full max-w-6xl min-h-160 bg-[#0c1017] border border-[#21262d] rounded-2xl overflow-hidden shadow-2xl grid grid-cols-1 lg:grid-cols-12 relative">
+        {/* Left Glowing Visual Column */}
+        <div className="lg:col-span-5 relative bg-linear-to-b from-[#2e0854] via-[#160b2b] to-[#0c1017] p-8 sm:p-10 flex flex-col justify-between overflow-hidden border-b lg:border-b-0 lg:border-r border-[#21262d]">
+          <div className="absolute top-10 left-10 w-72 h-72 bg-purple-600/30 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-10 right-10 w-64 h-64 bg-red-600/20 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-red-600/20 border border-red-500/40 flex items-center justify-center">
+              <ShieldAlert className="w-5 h-5 text-[#ff2a2a]" />
+            </div>
+            <div>
+              <span className="font-extrabold text-sm tracking-wider text-white">
+                CIPHER CELL CTF
+              </span>
+              <span className="text-[10px] block text-purple-300/70 font-mono tracking-widest uppercase">
+                MURDER MYSTERY 2.0
+              </span>
+            </div>
+          </div>
+
+          <div className="relative z-10 my-10 space-y-4">
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-tight">
+              Register Detective <br />
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-red-400 to-purple-400">
+                Clearance
+              </span>
+            </h2>
+            <p className="text-xs text-purple-200/70 leading-relaxed max-w-sm">
+              All students and seniors are eligible. Create your detective account with email/password
+              or your university Google account.
+            </p>
+
+            <div className="pt-4 space-y-2.5">
+              <div className="flex items-center gap-3 bg-[#0c1017]/60 backdrop-blur-md border border-purple-500/20 p-2.5 rounded-xl">
+                <div className="w-6 h-6 rounded-full bg-white text-black font-bold text-xs flex items-center justify-center">
+                  1
+                </div>
+                <div className="text-xs">
+                  <p className="font-semibold text-white">Any @iiitnr.edu.in Email</p>
+                  <p className="text-[10px] text-gray-400">Manual or Google — same domain lock</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 bg-[#0c1017]/30 border border-white/5 p-2.5 rounded-xl">
+                <div className="w-6 h-6 rounded-full bg-[#1c212a] text-gray-400 font-bold text-xs flex items-center justify-center">
+                  2
+                </div>
+                <div className="text-xs">
+                  <p className="font-semibold text-gray-300">All Batches Welcome</p>
+                  <p className="text-[10px] text-gray-500">1st Year, 2nd, 3rd & 4th Year Seniors</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative z-10 text-[11px] text-purple-300/50 font-mono">
+            Secure HttpOnly Cookie • University SSO
+          </div>
+        </div>
+
+        {/* Right Form Column */}
+        <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-center max-w-lg mx-auto w-full">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-white tracking-tight">Create Detective Account</h1>
+            <p className="text-xs text-gray-400 mt-1">
+              Already have an account?{' '}
+              <Link href="/login" className="text-[#ff2a2a] hover:underline font-semibold">
+                Sign in here
+              </Link>
+            </p>
+          </div>
+
+          {errorMsg && (
+            <div className="mb-4 p-3 bg-red-950/60 border border-red-800 text-red-300 text-xs rounded-lg flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1.5">Full Name</label>
+              <div className="relative">
+                <UserIcon className="w-4 h-4 text-gray-500 absolute left-3.5 top-3" />
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Divya Sharma"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-[#121721] border border-[#21262d] rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#ff2a2a] transition"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                University Email <span className="text-[#ff2a2a]">(@iiitnr.edu.in)</span>
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-gray-500 absolute left-3.5 top-3" />
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. yourname@iiitnr.edu.in"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-[#121721] border border-[#21262d] rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#ff2a2a] transition font-mono"
+                />
+              </div>
+
+              {email && (
+                <div className="mt-1.5 flex items-center gap-1.5 text-[11px] font-mono">
+                  {isIIITNREmail ? (
+                    <span className="text-green-400 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> IIIT-NR Domain Verified
+                    </span>
+                  ) : (
+                    <span className="text-yellow-400 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5" /> Must end with @iiitnr.edu.in
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                  Year / Seniority
+                </label>
+                <select
+                  value={batchYear}
+                  onChange={(e) => setBatchYear(e.target.value)}
+                  className="w-full bg-[#121721] border border-[#21262d] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#ff2a2a] transition"
+                >
+                  <option value="1st Year (Freshers)">1st Year (Freshers)</option>
+                  <option value="2nd Year (Seniors)">2nd Year (Seniors)</option>
+                  <option value="3rd Year (Super Seniors)">3rd Year (Super Seniors)</option>
+                  <option value="4th Year (Super Super Seniors)">
+                    4th Year (Super Super Seniors)
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1.5">Branch</label>
+                <select
+                  value={branch}
+                  onChange={(e) => setBranch(e.target.value)}
+                  className="w-full bg-[#121721] border border-[#21262d] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#ff2a2a] transition"
+                >
+                  <option value="CSE">Computer Science (CSE)</option>
+                  <option value="ECE">Electronics & Comm (ECE)</option>
+                  <option value="DSAI">Data Science & AI (DSAI)</option>
+                  <option value="Other">Other / Faculty</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1.5">Password</label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-gray-500 absolute left-3.5 top-3" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  minLength={8}
+                  placeholder="Min 8 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-[#121721] border border-[#21262d] rounded-xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#ff2a2a] transition font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-3 text-gray-500 hover:text-gray-300"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-2 bg-[#ff2a2a] hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-lg shadow-red-950/40 disabled:opacity-50"
+            >
+              {loading ? (
+                'Registering...'
+              ) : (
+                <>
+                  Register Detective Account <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Google SSO */}
+          <div className="mt-6 flex flex-col items-center gap-4">
+            <div className="flex items-center w-full gap-4">
+              <div className="flex-1 h-px bg-[#21262d]" />
+              <span className="text-xs text-gray-500 font-mono">OR CONTINUE WITH</span>
+              <div className="flex-1 h-px bg-[#21262d]" />
+            </div>
+
+            <div className="flex justify-center w-full">
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  if (!credentialResponse.credential) return;
+                  setLoading(true);
+                  setErrorMsg(null);
+                  try {
+                    // Creates account on first Google login if missing
+                    await googleLogin(credentialResponse.credential);
+                  } catch (err: unknown) {
+                    if (axios.isAxiosError(err)) {
+                      setErrorMsg(err.response?.data?.message || 'Google registration failed.');
+                    } else {
+                      setErrorMsg('Google registration failed.');
+                    }
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                onError={() => setErrorMsg('Google signup was cancelled or failed.')}
+                theme="filled_black"
+                shape="pill"
+                text="signup_with"
+                size="large"
+              />
+            </div>
+
+            <p className="text-[10px] text-gray-500 text-center font-mono leading-relaxed">
+              Google signup only accepts @iiitnr.edu.in accounts.
+              <br />
+              Branch/year default to CSE / 1st Year (editable later if you add profile).
+            </p>
+          </div>
+
+          <div className="mt-8 pt-4 border-t border-[#1c212a] text-center">
+            <Link href="/" className="text-[11px] text-gray-500 hover:text-gray-300 transition">
+              ← Return to Case Briefing & Suspects
+            </Link>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+
+================================================================================
+FILE: client\src\components\Navbar.tsx
+================================================================================
+
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  ShieldAlert,
+  Terminal,
+  LogOut,
+  User as UserIcon,
+  UserPlus,
+} from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+
+export default function Navbar() {
+  const pathname = usePathname();
+  const { user, logout } = useAuth();
+
+  return (
+    <nav className="border-b border-[#21262d] bg-[#090c10]/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4">
+      <div className="max-w-7xl mx-auto flex justify-between items-center gap-4">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5 group shrink-0">
+          <ShieldAlert className="w-7 h-7 text-[#ff2a2a] group-hover:drop-shadow-[0_0_8px_rgba(255,42,42,0.8)] transition" />
+          <div>
+            <span className="font-extrabold text-lg tracking-wider text-[#ff2a2a]">
+              MURDER MYSTERY 2.0
+            </span>
+            <span className="text-[10px] block text-gray-500 font-mono tracking-widest uppercase">
+              CIPHER CELL CTF
+            </span>
+          </div>
+        </Link>
+
+        {/* Center nav links */}
+        <div className="hidden sm:flex items-center gap-6 text-sm font-medium">
+          <Link
+            href="/"
+            className={`transition hover:text-[#ff2a2a] ${
+              pathname === '/' ? 'text-[#ff2a2a] font-bold' : 'text-gray-400'
+            }`}
+          >
+            The Premise
+          </Link>
+          <Link
+            href="/dashboard"
+            className={`flex items-center gap-1.5 transition hover:text-[#ff2a2a] ${
+              pathname === '/dashboard' ? 'text-[#ff2a2a] font-bold' : 'text-gray-400'
+            }`}
+          >
+            <Terminal className="w-4 h-4" /> Dashboard
+          </Link>
+        </div>
+
+        {/* Auth actions */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {!user ? (
+            <>
+              {/* Register CTA — visible when logged out */}
+              <Link
+                href="/register"
+                className="hidden sm:flex items-center gap-1.5 border border-[#30363d] hover:border-[#ff2a2a]/50 text-gray-300 hover:text-white font-semibold text-xs uppercase px-3 py-2 rounded transition"
+              >
+                <UserPlus className="w-3.5 h-3.5" /> Register
+              </Link>
+
+              <Link
+                href="/login"
+                className="bg-[#ff2a2a] hover:bg-red-700 text-white font-bold text-xs uppercase px-4 py-2 rounded transition flex items-center gap-2 shadow-lg shadow-red-950/40"
+              >
+                <UserIcon className="w-3.5 h-3.5" /> Sign In
+              </Link>
+            </>
+          ) : (
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2.5 bg-[#161b22] px-3.5 py-1.5 rounded-lg border border-[#30363d]">
+                <div className="w-6 h-6 rounded-full bg-[#ff2a2a] flex items-center justify-center font-bold text-xs">
+                  {user.name.charAt(0)}
+                </div>
+                <div>
+                  <span className="text-xs font-semibold block">{user.name}</span>
+                  <span className="text-[10px] text-[#ff2a2a] font-mono font-bold block">
+                    {user.score} pts
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={logout}
+                title="Sign Out"
+                className="p-2 rounded-lg bg-[#161b22] border border-[#30363d] hover:bg-red-950/40 text-gray-400 hover:text-red-400 transition"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+
+================================================================================
+FILE: client\src\context\AuthContext.tsx
+================================================================================
+
+'use client';
+
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  branch: string;
+  batchYear: string;
+  score: number;
+  role: string;
+  solvedChallenges?: string[];
+}
+
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (
+    name: string,
+    email: string,
+    password: string,
+    branch: string,
+    batchYear: string
+  ) => Promise<void>;
+  googleLogin: (credential: string) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await api.get<{ user: User }>('/api/auth/me');
+      setUser(res.data.user);
+    } catch {
+      setUser(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function bootstrapSession() {
+      try {
+        const res = await api.get<{ user: User }>('/api/auth/me');
+        if (!cancelled) setUser(res.data.user);
+      } catch {
+        if (!cancelled) setUser(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void bootstrapSession();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    const res = await api.post<{ user: User }>('/api/auth/login', { email, password });
+    setUser(res.data.user);
+    router.push('/dashboard');
+  };
+
+  const register = async (
+    name: string,
+    email: string,
+    password: string,
+    branch: string,
+    batchYear: string
+  ) => {
+    const res = await api.post<{ user: User }>('/api/auth/register', {
+      name,
+      email,
+      password,
+      branch,
+      batchYear,
+    });
+    setUser(res.data.user);
+    router.push('/dashboard');
+  };
+
+  const googleLogin = async (credential: string) => {
+    const res = await api.post<{ user: User }>('/api/auth/google', { credential });
+    setUser(res.data.user);
+    router.push('/dashboard');
+  };
+
+  const logout = async () => {
+    try {
+      await api.post('/api/auth/logout');
+    } catch {
+      // ignore
+    } finally {
+      setUser(null);
+      router.push('/login');
+    }
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{ user, loading, login, register, googleLogin, logout, refreshUser }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
+  return context;
+}
+
+
+================================================================================
+FILE: client\src\lib\api.ts
+================================================================================
+
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
+  // Crucial: This tells the browser to automatically attach the HttpOnly cookie to every request
+  withCredentials: true, 
+});
+
+export default api;
+
+
+================================================================================
+FILE: client\tsconfig.json
+================================================================================
+
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
+
+
+
+================================================================================
+FILE: server\.env.example
+================================================================================
+
+# Server
+NODE_ENV=development
+PORT=5000
+
+# Database
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/it_challenges
+
+# Redis (optional — leave blank to use MongoDB fallback)
+REDIS_URL=
+
+# Frontend (CORS + cookies)
+FRONTEND_URL=http://localhost:3000
+
+# Auth — generate with:
+# node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+JWT_SECRET=super_secret_jwt_random_key_replace_this_with_64_random_hex_characters
+
+# Cloudinary (challenge assets)
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+
+================================================================================
+FILE: server\package.json
+================================================================================
+
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.4",
+    "express": "^5.2.1",
+    "google-auth-library": "^11.1.0",
+    "helmet": "^8.3.0",
+    "ioredis": "^6.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.10.2",
+    "morgan": "^1.12.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
+
+
+
+================================================================================
+FILE: server\src\config\cloudinary.js
+================================================================================
+
+import { v2 as cloudinary } from 'cloudinary';
+import dotenv from 'dotenv';
+dotenv.config();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+});
+
+export default cloudinary;
+
+
+================================================================================
+FILE: server\src\config\db.js
+================================================================================
+
+import mongoose from 'mongoose';
+
+export const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
+    console.log(`[+] Remote MongoDB Atlas Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error(`[-] MongoDB Connection Error: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+
+================================================================================
+FILE: server\src\config\redis.js
+================================================================================
+
+import Redis from 'ioredis';
+import dotenv from 'dotenv';
+dotenv.config();
+
+let redisClient = null;
+
+const redisUrl = process.env.REDIS_URL;
+
+// Only attempt connecting if a real Redis URL is supplied (not placeholder)
+if (redisUrl && !redisUrl.includes('your_redis_password') && !redisUrl.includes('localhost:6379')) {
+  try {
+    redisClient = new Redis(redisUrl, {
+      maxRetriesPerRequest: 1,
+      connectTimeout: 3000,
+      enableReadyCheck: false,
+      retryStrategy(times) {
+        if (times > 2) {
+          console.warn('[-] Redis connection failed. Running in MongoDB fallback mode.');
+          return null; // Stop retrying
+        }
+        return 1000;
+      },
+    });
+
+    redisClient.on('ready', () => {
+      console.log('[+] Remote Cloud Redis Ready & Authenticated');
+    });
+
+    redisClient.on('error', (err) => {
+      console.warn(`[-] Redis Notice: ${err.message}`);
+    });
+  } catch (err) {
+    console.warn('[-] Failed to initialize Redis client:', err.message);
+  }
+} else {
+  console.log('[i] REDIS_URL not configured yet. Using MongoDB Atlas as primary store.');
+}
+
+export const redis = redisClient;
+
+
+================================================================================
+FILE: server\src\controllers\authController.js
+================================================================================
+
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
+import { User } from '../models/User.js';
+import { parseAndValidateIIITNR } from '../utils/collegeValidator.js';
+
+// Do NOT create OAuth2Client at module load time.
+// dotenv may not be loaded yet when ES imports are evaluated.
+function getGoogleClient() {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    throw new Error('GOOGLE_CLIENT_ID is missing from server environment');
+  }
+  return new OAuth2Client(clientId);
+}
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  path: '/',
+};
+
+// 1. REGISTER
+export const register = async (req, res) => {
+  const { name, email, password, branch, batchYear } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: 'Name, email, and password are required.' });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters.' });
+  }
+
+  if (password.length > 128) {
+    return res.status(400).json({ message: 'Password is too long.' });
+  }
+
+  const validation = parseAndValidateIIITNR(email);
+  if (!validation.isValid) {
+    return res.status(400).json({ message: validation.error });
+  }
+
+  try {
+    const existing = await User.findOne({ email: validation.normalizedEmail });
+    if (existing) {
+      return res.status(400).json({
+        message: 'An account with this IIIT-NR email already exists. Please sign in.',
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = await User.create({
+      name: name.trim(),
+      email: validation.normalizedEmail,
+      password: hashedPassword,
+      branch: branch || 'CSE',
+      batchYear: batchYear || '1st Year (Freshers)',
+    });
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.cookie('token', token, COOKIE_OPTIONS);
+
+    return res.status(201).json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        branch: user.branch,
+        batchYear: user.batchYear,
+        score: user.score,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: process.env.NODE_ENV === 'production' ? 'Registration failed.' : error.message,
+    });
+  }
+};
+
+// 2. LOGIN
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required.' });
+  }
+
+  try {
+    const normalized = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalized }).select('+password');
+
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid IIIT-NR email or password.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid IIIT-NR email or password.' });
+    }
+
+    if (user.isDisqualified) {
+      return res.status(403).json({ message: 'Account disqualified.' });
+    }
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.cookie('token', token, COOKIE_OPTIONS);
+
+    return res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        branch: user.branch,
+        batchYear: user.batchYear,
+        score: user.score,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: process.env.NODE_ENV === 'production' ? 'Login failed.' : error.message,
+    });
+  }
+};
+
+// 3. FORGOT PASSWORD
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ message: 'Email is required.' });
+
+  try {
+    const normalized = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalized });
+
+    if (!user) {
+      return res.json({
+        message: 'If an account exists, a recovery token has been generated.',
+      });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+    await user.save();
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`\n================ PASSWORD RESET (DEV ONLY) ================`);
+      console.log(`User: ${user.email}`);
+      console.log(`Reset Token: ${resetToken}`);
+      console.log(`===========================================================\n`);
+    }
+
+    return res.json({
+      message: 'If an account exists, a recovery token has been generated.',
+      ...(process.env.NODE_ENV !== 'production' ? { devToken: resetToken } : {}),
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: process.env.NODE_ENV === 'production' ? 'Request failed.' : error.message,
+    });
+  }
+};
+
+// 4. RESET PASSWORD
+export const resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword || newPassword.length < 8) {
+    return res.status(400).json({
+      message: 'Valid token and new password (min 8 characters) required.',
+    });
+  }
+
+  if (newPassword.length > 128) {
+    return res.status(400).json({ message: 'Password is too long.' });
+  }
+
+  try {
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.clearCookie('token', { ...COOKIE_OPTIONS, maxAge: 0 });
+
+    return res.json({
+      success: true,
+      message: 'Password successfully reset! You can now log in.',
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: process.env.NODE_ENV === 'production' ? 'Reset failed.' : error.message,
+    });
+  }
+};
+
+// 5. GET CURRENT DETECTIVE
+export const getMe = async (req, res) => {
+  return res.json({
+    user: {
+      id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      branch: req.user.branch,
+      batchYear: req.user.batchYear,
+      score: req.user.score,
+      role: req.user.role,
+    },
+  });
+};
+
+// 6. LOGOUT
+export const logout = async (req, res) => {
+  res.clearCookie('token', { ...COOKIE_OPTIONS, maxAge: 0 });
+  return res.json({ success: true, message: 'Logged out successfully.' });
+};
+
+// 7. GOOGLE SSO — university email only
+export const googleAuth = async (req, res) => {
+  const { credential } = req.body;
+
+  if (!credential) {
+    return res.status(400).json({ message: 'Google token is required.' });
+  }
+
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    console.error('[-] GOOGLE_CLIENT_ID is missing from server/.env');
+    return res.status(500).json({ message: 'Google login is not configured on the server.' });
+  }
+
+  try {
+    // Create client HERE (after dotenv has loaded), not at import time
+    const googleClient = getGoogleClient();
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload?.email) {
+      return res.status(400).json({ message: 'Google token missing email.' });
+    }
+
+    const email = String(payload.email).toLowerCase().trim();
+    const name = String(payload.name || email.split('@')[0]).trim();
+
+    console.log(`[+] Google login attempt: ${email}`);
+
+    // University domain lock
+    const isIIITNR =
+      email.endsWith('@iiitnr.edu.in') || email.endsWith('@iiitnr.ac.in');
+
+    if (!isIIITNR) {
+      return res.status(403).json({
+        message: 'Access Restricted: Use your university Google account (@iiitnr.edu.in).',
+      });
+    }
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      const randomPassword = crypto.randomBytes(32).toString('hex');
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(randomPassword, salt);
+
+      user = await User.create({
+        name,
+        email,
+        password: hashedPassword,
+        branch: 'CSE',
+        batchYear: '1st Year (Freshers)',
+      });
+
+      console.log(`[+] Created new Google user: ${email}`);
+    }
+
+    if (user.isDisqualified) {
+      return res.status(403).json({ message: 'Account disqualified.' });
+    }
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.cookie('token', token, COOKIE_OPTIONS);
+
+    return res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        branch: user.branch,
+        batchYear: user.batchYear,
+        score: user.score,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    // This will now print the REAL Google error in your server terminal
+    console.error('[-] Google auth error:', error?.message || error);
+    return res.status(401).json({
+      message:
+        process.env.NODE_ENV === 'production'
+          ? 'Google authentication failed.'
+          : `Google authentication failed: ${error?.message || 'unknown error'}`,
+    });
+  }
+};
+
+
+================================================================================
+FILE: server\src\controllers\challengeController.js
+================================================================================
+
+import { Challenge } from '../models/Challenge.js';
+import { Submission } from '../models/Submission.js';
+import { User } from '../models/User.js';
+import { verifyFlag } from '../utils/flagHasher.js';
+import { redis } from '../config/redis.js';
+
+// Get all 27 challenges (flags and salts strictly omitted)
+export const getChallenges = async (req, res) => {
+  try {
+    const challenges = await Challenge.find()
+      .sort({ difficultyRank: 1 }) // Rank 1 (Highest) to 27 (Lowest)
+      .lean();
+
+    const userSolves = (req.user.solvedChallenges || []).map((id) => id.toString());
+    const data = challenges.map((ch) => ({
+      ...ch,
+      isSolved: userSolves.includes(ch._id.toString()),
+    }));
+
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error fetching challenges' });
+  }
+};
+
+// Flag submission with Atomic MongoDB Lock (Prevents Multi-Threading Race Conditions)
+export const submitFlag = async (req, res) => {
+  const { id } = req.params;
+  const { flag } = req.body;
+  const userId = req.user._id;
+
+  if (!flag) return res.status(400).json({ message: 'No flag provided' });
+
+  try {
+    const challenge = await Challenge.findById(id).select('+flagHash +salt');
+    if (!challenge) return res.status(404).json({ message: 'Challenge not found' });
+
+    // 1. FAST CHECK: Did user already solve it?
+    if (req.user.solvedChallenges.includes(challenge._id)) {
+      return res.status(400).json({ message: 'Challenge already solved by you!' });
+    }
+
+    // 2. Cryptographic timing-safe verification
+    const isMatch = verifyFlag(flag, challenge.flagHash, challenge.salt);
+
+    await Submission.create({
+      userId,
+      challengeId: challenge._id,
+      isCorrect: isMatch,
+      pointsAwarded: isMatch ? challenge.points : 0,
+      submittedFlag: flag,
+      ipAddress: req.ip,
+    });
+
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Incorrect flag. Keep investigating!' });
+    }
+
+    // 3. ATOMIC LOCK: Only adds points if challenge._id is NOT in solvedChallenges.
+    // If a player fires 10 simultaneous threads, only ONE query succeeds; 9 will fail.
+    const updatedUser = await User.findOneAndUpdate(
+      {
+        _id: userId,
+        solvedChallenges: { $ne: challenge._id },
+      },
+      {
+        $inc: { score: challenge.points },
+        $push: { solvedChallenges: challenge._id },
+        lastSolveTime: new Date(),
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(400).json({ message: 'Solve collision: Flag already credited.' });
+    }
+
+    // Award solve count to challenge statistics
+    await Challenge.findByIdAndUpdate(challenge._id, { $inc: { solvesCount: 1 } });
+
+    // Issue #8: only players enter the public leaderboard (never admins)
+if (redis && redis.status === 'ready' && updatedUser.role === 'player') {
+  const tieBreaker = 1 - Date.now() / 1e13;
+  const redisScore = updatedUser.score + tieBreaker;
+  await redis.zadd('leaderboard', redisScore, userId.toString());
+}
+
+    return res.json({
+      success: true,
+      message: 'Flag confirmed! Detective score credited.',
+      newScore: updatedUser.score,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+================================================================================
+FILE: server\src\controllers\leaderboardController.js
+================================================================================
+
+import { redis } from '../config/redis.js';
+import { User } from '../models/User.js';
+
+export const getLeaderboard = async (req, res) => {
+  try {
+    // 1. Redis sorted set path
+    if (redis && redis.status === 'ready') {
+      try {
+        const rawRanks = await redis.zrevrange('leaderboard', 0, 49, 'WITHSCORES');
+
+        if (rawRanks && rawRanks.length > 0) {
+          // Issue #7: collect IDs first, ONE Mongo query instead of N+1
+          const userIds = [];
+
+          for (let i = 0; i < rawRanks.length; i += 2) {
+            userIds.push(rawRanks[i]);
+          }
+
+          const users = await User.find({
+            _id: { $in: userIds },
+            role: 'player', // Issue #8: never show admins on leaderboard
+            isDisqualified: { $ne: true },
+          })
+            .select('name score email')
+            .lean();
+
+          // Map for O(1) lookup
+          const userMap = new Map(users.map((u) => [u._id.toString(), u]));
+
+          // Preserve Redis rank order
+          const leaderboard = userIds
+            .map((id) => userMap.get(id))
+            .filter(Boolean);
+
+          if (leaderboard.length > 0) {
+            return res.json(leaderboard);
+          }
+        }
+      } catch (redisErr) {
+        console.warn('[-] Redis query failed, falling back to MongoDB:', redisErr.message);
+      }
+    }
+
+    // 2. MongoDB fallback
+    // Issue #8: only players
+    const dbUsers = await User.find({
+      role: 'player',
+      isDisqualified: { $ne: true },
+    })
+      .sort({ score: -1, lastSolveTime: 1 })
+      .limit(50)
+      .select('name score email')
+      .lean();
+
+    return res.json(dbUsers || []);
+  } catch (err) {
+    console.error('[-] Error in getLeaderboard:', err);
+    return res.status(500).json({ message: 'Failed to fetch leaderboard' });
+  }
+};
+
+
+================================================================================
+FILE: server\src\middlewares\adminOnly.js
+================================================================================
+
+export const requireAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({
+      message: 'ACCESS FORBIDDEN: This breach attempt has been logged.',
+    });
+  }
+  next();
+};
+
+
+================================================================================
+FILE: server\src\middlewares\auth.js
+================================================================================
+
+import jwt from 'jsonwebtoken';
+import { User } from '../models/User.js';
+
+export const requireAuth = async (req, res, next) => {
+  // STRICTLY use the HttpOnly cookie. No fallback to headers.
+  const token = req.cookies?.token;
+
+  if (!token) {
+    return res.status(401).json({ message: 'Authentication required. No token found.' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select('-__v');
+
+    if (!user || user.isDisqualified) {
+      return res.status(403).json({ message: 'Account disqualified or not found.' });
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Session expired or invalid token.' });
+  }
+};
+
+
+================================================================================
+FILE: server\src\middlewares\errorHandler.js
+================================================================================
+
+export const errorHandler = (err, req, res, next) => {
+  console.error(`[-] Server Error: ${err.message}`);
+
+  const statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
+
+  res.status(statusCode).json({
+    message: process.env.NODE_ENV === 'production' ? 'An internal error occurred.' : err.message,
+  });
+};
+
+
+================================================================================
+FILE: server\src\middlewares\loginLimiter.js
+================================================================================
+
+import { redis } from '../config/redis.js';
+
+export const loginRateLimiter = async (req, res, next) => {
+  // Skip if Redis is offline
+  if (!redis || redis.status !== 'ready') return next();
+
+  const key = `login-attempts:${req.ip}`;
+  
+  try {
+    const attempts = await redis.incr(key);
+    if (attempts === 1) {
+      await redis.expire(key, 15 * 60); // 15-minute window
+    }
+
+    if (attempts > 10) {
+      return res.status(429).json({
+        message: 'Too many login attempts. Try again in 15 minutes.',
+      });
+    }
+    next();
+  } catch {
+    next(); // Fail open if Redis breaks
+  }
+};
+
+
+================================================================================
+FILE: server\src\middlewares\rateLimiter.js
+================================================================================
+
+import { redis } from '../config/redis.js';
+
+export const submitRateLimiter = async (req, res, next) => {
+  // If Redis is offline, continue without breaking the competition
+  if (!redis || redis.status !== 'ready') {
+    return next();
+  }
+
+  const userId = req.user._id.toString();
+  const challengeId = req.params.id;
+  const spamKey = `spam:${userId}:${challengeId}`;
+  const freezeKey = `freeze:${userId}:${challengeId}`;
+
+  try {
+    // 1. Check if user is currently frozen on this challenge
+    const isFrozen = await redis.get(freezeKey);
+    if (isFrozen) {
+      const ttl = await redis.ttl(freezeKey);
+      return res.status(429).json({
+        message: `Too many failed attempts! Detective locked out for ${ttl} more seconds.`,
+      });
+    }
+
+    // 2. Increment 60-second sliding attempt counter
+    const attempts = await redis.incr(spamKey);
+    if (attempts === 1) {
+      await redis.expire(spamKey, 60);
+    }
+
+    // Max 5 attempts per minute
+    if (attempts > 5) {
+      // Trigger 5-minute lockout (300 seconds) if spamming persists
+      await redis.set(freezeKey, 'locked', 'EX', 300);
+      return res.status(429).json({
+        message: 'Brute-force detected! You are locked out of this challenge for 5 minutes.',
+      });
+    }
+
+    next();
+  } catch (err) {
+    next();
+  }
+};
+
+
+================================================================================
+FILE: server\src\middlewares\validate.js
+================================================================================
+
+export const validate = (schema) => (req, res, next) => {
+  const result = schema.safeParse(req.body);
+
+  if (!result.success) {
+    return res.status(400).json({
+      message: 'Invalid input data.',
+      errors: result.error.issues.map((i) => ({
+        field: i.path.join('.') || 'body',
+        message: i.message,
+      })),
+    });
+  }
+
+  req.body = result.data;
+  next();
+};
+
+
+================================================================================
+FILE: server\src\models\Challenge.js
+================================================================================
+
+import mongoose from 'mongoose';
+
+const challengeSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    slug: { type: String, required: true, unique: true },
+    description: { type: String, required: true },
+    category: {
+      type: String,
+      enum: ['Web', 'Pwn', 'Crypto', 'Forensics', 'Rev', 'OSINT', 'Misc'],
+      required: true,
+    },
+    difficultyRank: { type: Number, required: true }, // 1 (Highest) to 27 (Lowest)
+    initialPoints: { type: Number, required: true },
+    points: { type: Number, required: true },
+    flagHash: { type: String, required: true, select: false }, // Never returned by queries
+    salt: { type: String, required: true, select: false },     // Never returned by queries
+    assets: [{ name: String, url: String }],                   // Cloudinary URLs
+    hint: { type: String },
+    solvesCount: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+
+export const Challenge = mongoose.model('Challenge', challengeSchema);
+
+
+================================================================================
+FILE: server\src\models\Submission.js
+================================================================================
+
+import mongoose from 'mongoose';
+
+const submissionSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    challengeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Challenge', required: true, index: true },
+    isCorrect: { type: Boolean, required: true },
+    pointsAwarded: { type: Number, default: 0 },
+    submittedFlag: { type: String, select: false }, // Recorded for forensics, hidden by default
+    ipAddress: { type: String },
+  },
+  { timestamps: true }
+);
+
+export const Submission = mongoose.model('Submission', submissionSchema);
+
+
+================================================================================
+FILE: server\src\models\User.js
+================================================================================
+
+import mongoose from 'mongoose';
+
+const userSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true, index: true },
+    password: { type: String, required: true, select: false },
+    branch: { type: String, required: true },
+    batchYear: { type: String, required: true },
+    score: { type: Number, default: 0 },
+    solvedChallenges: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Challenge' }],
+    role: { type: String, enum: ['player', 'admin'], default: 'player' },
+    isDisqualified: { type: Boolean, default: false },
+    lastSolveTime: { type: Date },
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpires: { type: Date, select: false },
+  },
+  { timestamps: true }
+);
+
+export const User = mongoose.model('User', userSchema);
+
+
+================================================================================
+FILE: server\src\routes\authRoutes.js
+================================================================================
+
+import express from 'express';
+import {
+  register,
+  login,
+  forgotPassword,
+  resetPassword,
+  getMe,
+  logout,
+  googleAuth,
+} from '../controllers/authController.js';
+import { requireAuth } from '../middlewares/auth.js';
+import { validate } from '../middlewares/validate.js';
+import { loginRateLimiter } from '../middlewares/loginLimiter.js';
+import {
+  registerSchema,
+  loginSchema,
+  googleAuthSchema,
+} from '../utils/validators.js';
+
+const router = express.Router();
+
+router.post('/register', loginRateLimiter, validate(registerSchema), register);
+router.post('/login', loginRateLimiter, validate(loginSchema), login);
+router.post('/google', loginRateLimiter, validate(googleAuthSchema), googleAuth);
+
+router.post('/forgot-password', loginRateLimiter, forgotPassword);
+router.post('/reset-password', loginRateLimiter, resetPassword);
+
+router.get('/me', requireAuth, getMe);
+router.post('/logout', logout);
+
+export default router;
+
+
+================================================================================
+FILE: server\src\routes\challengeRoutes.js
+================================================================================
+
+import express from 'express';
+import { getChallenges, submitFlag } from '../controllers/challengeController.js';
+import { requireAuth } from '../middlewares/auth.js';
+import { submitRateLimiter } from '../middlewares/rateLimiter.js';
+
+const router = express.Router();
+
+router.get('/', requireAuth, getChallenges);
+router.post('/:id/submit', requireAuth, submitRateLimiter, submitFlag);
+
+export default router;
+
+
+================================================================================
+FILE: server\src\routes\leaderboardRoutes.js
+================================================================================
+
+import express from 'express';
+import { getLeaderboard } from '../controllers/leaderboardController.js';
+
+const router = express.Router();
+
+router.get('/', getLeaderboard);
+
+export default router;
+
+
+================================================================================
+FILE: server\src\server.js
+================================================================================
+
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
+import dotenv from 'dotenv';
+import { connectDB } from './config/db.js';
+import './config/redis.js';
+
+import authRoutes from './routes/authRoutes.js';
+import challengeRoutes from './routes/challengeRoutes.js';
+import leaderboardRoutes from './routes/leaderboardRoutes.js';
+import { errorHandler } from './middlewares/errorHandler.js';
+
+dotenv.config();
+
+// ─── Improvement #14: fail fast if critical env is missing ───────────────
+const requiredEnv = ['MONGO_URI', 'JWT_SECRET'];
+
+for (const key of requiredEnv) {
+  if (!process.env[key]) {
+    console.error(`[-] FATAL: Missing environment variable ${key}`);
+    process.exit(1);
+  }
+}
+
+if (process.env.JWT_SECRET.length < 32) {
+  console.error('[-] FATAL: JWT_SECRET must be at least 32 characters long');
+  process.exit(1);
+}
+
+// FRONTEND_URL is strongly recommended (required in production)
+if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
+  console.error('[-] FATAL: FRONTEND_URL must be set in production');
+  process.exit(1);
+}
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// ─── Security headers (Helmet) ───────────────────────────────────────────
+// API server: sensible defaults + explicit hardened options
+app.use(
+  helmet({
+    // API returns JSON, not HTML documents — disable CSP that blocks nothing useful here
+    // If you later serve HTML from Express, configure contentSecurityPolicy properly.
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
+
+app.use(cookieParser());
+
+// ─── Improvement #13: explicit CORS allowlist ────────────────────────────
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:3000',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+].filter(Boolean);
+
+// de-duplicate
+const uniqueOrigins = [...new Set(allowedOrigins)];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Allow non-browser tools (Postman/curl) that send no Origin header
+      if (!origin) return callback(null, true);
+
+      if (uniqueOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.warn(`[-] Blocked CORS origin: ${origin}`);
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true, // required for HttpOnly cookies
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
+
+// Limit JSON body size (basic DoS / abuse protection)
+app.use(express.json({ limit: '16kb' }));
+app.use(morgan('dev'));
+
+// Database
+connectDB();
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/challenges', challengeRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
+
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'healthy', uptime: process.uptime() });
+});
+
+// Global Error Handler (must be after all routes)
+app.use(errorHandler);
+
+app.listen(PORT, () => {
+  console.log(`[+] Cipher Cell API running on http://localhost:${PORT}`);
+  console.log(`[+] Allowed CORS origins: ${uniqueOrigins.join(', ')}`);
+});
+
+
+================================================================================
+FILE: server\src\utils\asyncHandler.js
+================================================================================
+
+import { asyncHandler } from '../utils/asyncHandler.js';
+
+export const login = asyncHandler(async (req, res) => {
+  // no more try/catch needed
+  // errors auto-forward to errorHandler middleware
+});
+
+
+================================================================================
+FILE: server\src\utils\collegeValidator.js
+================================================================================
+
+/**
+ * Validates that the email belongs to IIIT-NR.
+ * Branch and batch year come from the registration form — not from email guessing.
+ */
+export function parseAndValidateIIITNR(email) {
+  if (!email || typeof email !== 'string') {
+    return { isValid: false, error: 'Email is required.' };
+  }
+
+  const normalized = email.trim().toLowerCase();
+
+  // Basic shape check
+  if (!normalized.includes('@') || normalized.length > 100) {
+    return { isValid: false, error: 'Invalid email format.' };
+  }
+
+  const isIIITNR =
+    normalized.endsWith('@iiitnr.edu.in') || normalized.endsWith('@iiitnr.ac.in');
+
+  if (!isIIITNR) {
+    return {
+      isValid: false,
+      error:
+        'Access Restricted: You must use your university email ending with @iiitnr.edu.in',
+    };
+  }
+
+  // Local-part must not be empty (e.g. "@iiitnr.edu.in")
+  const localPart = normalized.split('@')[0];
+  if (!localPart || localPart.length < 1) {
+    return { isValid: false, error: 'Invalid email format.' };
+  }
+
+  return {
+    isValid: true,
+    normalizedEmail: normalized,
+  };
+}
+
+
+================================================================================
+FILE: server\src\utils\flagHasher.js
+================================================================================
+
+import crypto from 'crypto';
+
+// Hash raw flag with unique challenge salt
+export function hashFlag(rawFlag, salt) {
+  const normalized = rawFlag.trim();
+  return crypto.createHmac('sha256', salt).update(normalized).digest('hex');
+}
+
+// Timing-safe flag verification to stop side-channel attacks
+export function verifyFlag(submittedFlag, storedHash, salt) {
+  const submittedHash = hashFlag(submittedFlag, salt);
+  const bufA = Buffer.from(submittedHash, 'utf8');
+  const bufB = Buffer.from(storedHash, 'utf8');
+
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+
+================================================================================
+FILE: server\src\utils\seed.js
+================================================================================
+
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import { Challenge } from '../models/Challenge.js';
+import { hashFlag } from './flagHasher.js';
+import crypto from 'crypto';
+
+dotenv.config();
+
+const challengesData = [
+  { rank: 1, title: 'The Root of All Evil', cat: 'Pwn', pts: 1000, desc: 'Exploit ring 0 kernel module vulnerability.', flag: 'CTF{k3rn3l_r00t_0f_4ll_3v1l}' },
+  { rank: 2, title: 'Phantom Syndicate', cat: 'Web', pts: 950, desc: 'Blind SSRF through internal registry to pop RCE.', flag: 'CTF{ssrf_t0_d0ck3r_rce_unlocked}' },
+  { rank: 3, title: 'Zero-Knowledge Nightmare', cat: 'Crypto', pts: 900, desc: 'Discrete logarithm flaw in elliptic curve signatures.', flag: 'CTF{zkg_d1scr3t3_l0g_br0k3n}' },
+  { rank: 4, title: 'Subverted Firmware', cat: 'Rev', pts: 850, desc: 'Reverse-engineer Ghidra decompiled router firmware.', flag: 'CTF{f1rmw4r3_gh1dr4_m1ps_pwnd}' },
+  { rank: 5, title: 'The ROP Emporium', cat: 'Pwn', pts: 800, desc: '64-bit ELF with NX/ASLR. Craft a clean ROP chain.', flag: 'CTF{r0p_g4dg3t_ch41n_m4st3r}' },
+  { rank: 6, title: 'Jinja2 Escapology', cat: 'Web', pts: 750, desc: 'Python SSTI with strict WAF (no underscores or brackets).', flag: 'CTF{sst1_j1nj42_byp4ss_g0d}' },
+  { rank: 7, title: 'In-Memory Intruder', cat: 'Forensics', pts: 700, desc: 'Volatility 3 dump showing injected thread hollowing.', flag: 'CTF{v0l4t1l1ty3_m4lf1nd_pr0c}' },
+  { rank: 8, title: 'Bit-Flipper', cat: 'Crypto', pts: 700, desc: 'AES-CBC ciphertext bit-flipping attack to forge admin token.', flag: 'CTF{c1ph3rt3xt_b1t_fl1pp1ng_cbc}' },
+  { rank: 9, title: 'The Redacted Inode', cat: 'Forensics', pts: 650, desc: 'Ext4 raw disk forensics: recover fragmented PDF.', flag: 'CTF{3xt4_1n0d3_c4rv1ng_succ3ss}' },
+  { rank: 10, title: 'License Enforcer v3', cat: 'Rev', pts: 650, desc: 'Anti-debugging with ptrace and custom VM bytecode.', flag: 'CTF{vm_byt3c0d3_d30bfusc4t3d}' },
+  { rank: 11, title: 'Broken Pipe', cat: 'Web', pts: 550, desc: 'Node.js Prototype Pollution leading to remote code execution.', flag: 'CTF{pr0t0typ3_p0llut10n_rce}' },
+  { rank: 12, title: 'Heap of Trouble', cat: 'Pwn', pts: 550, desc: 'Fastbin dup and use-after-free heap exploitation.', flag: 'CTF{u4f_f4stb1n_dup_cl4ss1c}' },
+  { rank: 13, title: 'The Covert Tunnel', cat: 'Forensics', pts: 500, desc: 'Extract data exfiltrated through covert DNS subqueries.', flag: 'CTF{dns_c0v3rt_tunn3l_3xf1l}' },
+  { rank: 14, title: 'Wiener’s Dilemma', cat: 'Crypto', pts: 500, desc: 'RSA small private exponent attack.', flag: 'CTF{w13n3r_sm4ll_d_4tt4ck}' },
+  { rank: 15, title: 'PyJail Lockdown', cat: 'Misc', pts: 450, desc: 'Escape restricted Python sandbox with stripped builtins.', flag: 'CTF{pyj41l_subcl4ss_3sc4p3}' },
+  { rank: 16, title: 'The OAuth Hijack', cat: 'Web', pts: 450, desc: 'Flawed redirect_uri regex stealing authorization codes.', flag: 'CTF{04uth_r3d1r3ct_st0l3n}' },
+  { rank: 17, title: 'Many-Time Pad', cat: 'Crypto', pts: 400, desc: 'XOR key reuse across 8 ciphertexts (Crib Dragging).', flag: 'CTF{cr1b_dr4gg1ng_otp_r3us3}' },
+  { rank: 18, title: 'Shattered Commit', cat: 'OSINT', pts: 400, desc: 'Find deleted credentials in Git reflog and orphan commits.', flag: 'CTF{g1t_r3fl0g_s3cr3t_f0und}' },
+  { rank: 19, title: 'IDOR Matrix', cat: 'Web', pts: 350, desc: 'Insecure Direct Object Reference leaking victim records.', flag: 'CTF{1d0r_uuid_pr3d1ct4bl3}' },
+  { rank: 20, title: 'The Traitor’s Audio', cat: 'Forensics', pts: 350, desc: 'Decode SSTV audio transmission hidden in WAV static.', flag: 'CTF{sstv_aud10_ tr4nsm1ss10n}' },
+  { rank: 21, title: 'SQLi Time Delay', cat: 'Web', pts: 300, desc: 'Blind time-based SQL injection with pg_sleep.', flag: 'CTF{t1m3_b4s3d_sql1_unl0ck3d}' },
+  { rank: 22, title: 'XOR Labyrinth', cat: 'Rev', pts: 300, desc: 'Reverse multi-stage XOR loops in a stripped Go binary.', flag: 'CTF{g0_x0r_l4byr1nth_c0nqu3r3d}' },
+  { rank: 23, title: 'The Phantom Header', cat: 'Web', pts: 250, desc: 'Inspect hidden response headers and debug cookies.', flag: 'CTF{c00k13_m0nst3r_burp3d}' },
+  { rank: 24, title: 'The Deep Metadata', cat: 'Forensics', pts: 200, desc: 'BSSID wireless triangulation and camera serial lookup.', flag: 'CTF{3x1f_gps_bss1d_tr4ck3d}' },
+  { rank: 25, title: 'Corrupt Header', cat: 'Forensics', pts: 200, desc: 'Repair damaged magic bytes on a corrupt PNG file.', flag: 'CTF{png_m4g1c_byt3s_r3st0r3d}' },
+  { rank: 26, title: 'Layered Secrets', cat: 'Forensics', pts: 150, desc: 'LSB bitplane steganography on the red channel.', flag: 'CTF{lsb_st3g_und3r_bl00d}' },
+  { rank: 27, title: 'The Cipher Cell Chit', cat: 'Crypto', pts: 100, desc: 'Decipher the 13-step Caesar cipher chit found at the scene.', flag: 'CTF{13_st3ps_4h34d_0f_k1ll3r}' },
+];
+
+async function seed() {
+  await mongoose.connect(process.env.MONGO_URI);
+  console.log('[+] Connected to MongoDB for seeding...');
+
+  await Challenge.deleteMany({});
+  console.log('[-] Cleared old challenges.');
+
+  for (const item of challengesData) {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const flagHash = hashFlag(item.flag, salt);
+
+    await Challenge.create({
+      title: item.title,
+      slug: item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      description: item.desc,
+      category: item.cat,
+      difficultyRank: item.rank,
+      initialPoints: item.pts,
+      points: item.pts,
+      flagHash,
+      salt,
+      solvesCount: 0,
+    });
+  }
+
+  console.log('🎉 Successfully seeded all 27 challenges into MongoDB Atlas!');
+  process.exit(0);
+}
+
+seed().catch(console.error);
+
+
+================================================================================
+FILE: server\src\utils\validators.js
+================================================================================
+
+import { z } from 'zod';
+
+export const registerSchema = z.object({
+  name: z.string().trim().min(2).max(50),
+  email: z.string().trim().toLowerCase().email().max(100),
+  password: z.string().min(8).max(128),
+  branch: z.enum(['CSE', 'ECE', 'DSAI', 'Other']),
+  batchYear: z.enum([
+    '1st Year (Freshers)',
+    '2nd Year (Seniors)',
+    '3rd Year (Super Seniors)',
+    '4th Year (Super Super Seniors)',
+  ]),
+});
+
+export const loginSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(1).max(128),
+});
+
+export const googleAuthSchema = z.object({
+  credential: z.string().min(20),
+});
+
+export const submitFlagSchema = z.object({
+  flag: z.string().trim().min(1).max(200),
+});
