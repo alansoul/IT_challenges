@@ -1,9 +1,83 @@
+import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Provider 1: Gmail SMTP / Custom Transporter (No domain verification needed, sends to ANY email)
+function getSmtpTransporter() {
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    return nodemailer.createTransport({
+      service: process.env.SMTP_SERVICE || 'gmail',
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true', // true for 465
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS, // 16-character Gmail App Password
+      },
+    });
+  }
+  return null;
+}
+
+// Provider 2: Resend API
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const FROM_EMAIL = process.env.EMAIL_FROM || 'Cipher Cell CTF <onboarding@resend.dev>';
+const FROM_RESEND = process.env.EMAIL_FROM || 'Cipher Cell CTF <onboarding@resend.dev>';
+
+/**
+ * Universal Email Dispatcher with Automatic Fallback Chain
+ */
+async function dispatchEmail({ toEmail, subject, html, text }) {
+  const smtp = getSmtpTransporter();
+
+  // --- 1. TRY GMAIL / CUSTOM SMTP FIRST ---
+  if (smtp) {
+    try {
+      const fromAddress = process.env.SMTP_FROM || `"Cipher Cell CTF" <${process.env.SMTP_USER}>`;
+      const info = await smtp.sendMail({
+        from: fromAddress,
+        to: toEmail,
+        subject,
+        text,
+        html,
+      });
+      console.log(`[+] [SMTP] Email delivered to ${toEmail} (id: ${info.messageId})`);
+      return { sent: true, provider: 'smtp', messageId: info.messageId };
+    } catch (err) {
+      console.warn(`[-] [SMTP] Failed sending to ${toEmail}: ${err.message}. Triggering Resend fallback...`);
+    }
+  }
+
+  // --- 2. TRY RESEND API SECOND ---
+  if (resend) {
+    try {
+      const { data, error } = await resend.emails.send({
+        from: FROM_RESEND,
+        to: toEmail,
+        subject,
+        html,
+        text,
+      });
+
+      if (!error && data) {
+        console.log(`[+] [Resend] Email delivered to ${toEmail} (id: ${data.id})`);
+        return { sent: true, provider: 'resend', id: data.id };
+      }
+      console.warn(`[-] [Resend] Failed sending to ${toEmail}: ${error?.message || 'Unknown error'}`);
+    } catch (err) {
+      console.warn(`[-] [Resend] Exception sending to ${toEmail}: ${err.message}`);
+    }
+  }
+
+  // --- 3. EMERGENCY FALLBACK: LOG TO SERVER CONSOLE ---
+  console.log(`\n================ EMAIL DISPATCH FALLBACK (CONSOLE LOG) ================`);
+  console.log(`To:      ${toEmail}`);
+  console.log(`Subject: ${subject}`);
+  console.log(`Text:\n${text}`);
+  console.log(`======================================================================\n`);
+
+  return { sent: false, provider: 'console' };
+}
 
 /**
  * Send 6-digit OTP for email verification
@@ -31,36 +105,8 @@ export async function sendOtpEmail(toEmail, otp) {
 
   const text = `CIPHER CELL CTF — Clearance Code\n\nYour OTP: ${otp}\nExpires in 10 minutes.\n\nIf you did not request this, ignore this email.`;
 
-  if (!resend) {
-    console.log(`\n================ OTP EMAIL (NO RESEND KEY) ================`);
-    console.log(`To:  ${toEmail}`);
-    console.log(`OTP: ${otp}`);
-    console.log(`==========================================================\n`);
-    return { sent: false, otp };
-  }
-
-  try {
-    const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
-      to: toEmail,
-      subject,
-      html,
-      text,
-    });
-
-    if (error) {
-      console.error(`[-] Resend OTP error:`, error);
-      console.log(`[i] Fallback OTP for ${toEmail}: ${otp}`);
-      return { sent: false, error: error.message, otp };
-    }
-
-    console.log(`[+] OTP email sent to ${toEmail} (id: ${data?.id})`);
-    return { sent: true, id: data?.id };
-  } catch (err) {
-    console.error(`[-] OTP send failed:`, err.message);
-    console.log(`[i] Fallback OTP for ${toEmail}: ${otp}`);
-    return { sent: false, error: err.message, otp };
-  }
+  const result = await dispatchEmail({ toEmail, subject, html, text });
+  return { ...result, otp };
 }
 
 /**
@@ -105,34 +151,6 @@ ${resetLink}
 If you did not request this, ignore this email.
   `.trim();
 
-  if (!resend) {
-    console.log(`\n================ PASSWORD RESET (NO RESEND KEY) ================`);
-    console.log(`To:   ${toEmail}`);
-    console.log(`Link: ${resetLink}`);
-    console.log(`================================================================\n`);
-    return { sent: false, previewUrl: resetLink };
-  }
-
-  try {
-    const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
-      to: toEmail,
-      subject,
-      html,
-      text,
-    });
-
-    if (error) {
-      console.error(`[-] Resend reset error:`, error);
-      console.log(`[i] Manual recovery link for ${toEmail}: ${resetLink}`);
-      return { sent: false, error: error.message, previewUrl: resetLink };
-    }
-
-    console.log(`[+] Password reset email sent to ${toEmail} (id: ${data?.id})`);
-    return { sent: true, id: data?.id };
-  } catch (err) {
-    console.error(`[-] Reset email failed:`, err.message);
-    console.log(`[i] Manual recovery link for ${toEmail}: ${resetLink}`);
-    return { sent: false, error: err.message, previewUrl: resetLink };
-  }
+  const result = await dispatchEmail({ toEmail, subject, html, text });
+  return { ...result, previewUrl: resetLink };
 }
