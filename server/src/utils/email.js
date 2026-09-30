@@ -3,7 +3,7 @@ import { Resend } from 'resend';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Provider 1: Gmail SMTP / Custom Transporter (No domain verification needed, sends to ANY email)
+// Provider 1: Gmail SMTP / Custom Transporter with strict 3s connection timeouts
 function getSmtpTransporter() {
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
     return nodemailer.createTransport({
@@ -15,6 +15,9 @@ function getSmtpTransporter() {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS, // 16-character Gmail App Password
       },
+      connectionTimeout: 3000, // 3s max timeout
+      greetingTimeout: 3000,
+      socketTimeout: 3000,
     });
   }
   return null;
@@ -25,33 +28,45 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 const FROM_RESEND = process.env.EMAIL_FROM || 'Cipher Cell CTF <onboarding@resend.dev>';
 
 /**
- * Universal Email Dispatcher with Automatic Fallback Chain
+ * Universal Email Dispatcher with 3-Second Timeout Cap
  */
 async function dispatchEmail({ toEmail, subject, html, text }) {
   const smtp = getSmtpTransporter();
+
+  // --- Helper to race a promise against a 3.5s timeout ---
+  const withTimeout = (promise, name) =>
+    Promise.race([
+      promise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`${name} connection timed out after 3.5s`)), 3500)
+      ),
+    ]);
 
   // --- 1. TRY GMAIL / CUSTOM SMTP FIRST ---
   if (smtp) {
     try {
       const fromAddress = process.env.SMTP_FROM || `"Cipher Cell CTF" <${process.env.SMTP_USER}>`;
-      const info = await smtp.sendMail({
-        from: fromAddress,
-        to: toEmail,
-        subject,
-        text,
-        html,
-      });
+      const info = await withTimeout(
+        smtp.sendMail({
+          from: fromAddress,
+          to: toEmail,
+          subject,
+          text,
+          html,
+        }),
+        'SMTP'
+      );
       console.log(`[+] [SMTP] Email delivered to ${toEmail} (id: ${info.messageId})`);
       return { sent: true, provider: 'smtp', messageId: info.messageId };
     } catch (err) {
-      console.warn(`[-] [SMTP] Failed sending to ${toEmail}: ${err.message}. Triggering Resend fallback...`);
+      console.warn(`[-] [SMTP] Failed: ${err.message}. Trying Resend fallback...`);
     }
   }
 
   // --- 2. TRY RESEND API SECOND ---
   if (resend) {
     try {
-      const { data, error } = await resend.emails.send({
+      const resendPromise = resend.emails.send({
         from: FROM_RESEND,
         to: toEmail,
         subject,
@@ -59,13 +74,15 @@ async function dispatchEmail({ toEmail, subject, html, text }) {
         text,
       });
 
+      const { data, error } = await withTimeout(resendPromise, 'Resend API');
+
       if (!error && data) {
         console.log(`[+] [Resend] Email delivered to ${toEmail} (id: ${data.id})`);
         return { sent: true, provider: 'resend', id: data.id };
       }
-      console.warn(`[-] [Resend] Failed sending to ${toEmail}: ${error?.message || 'Unknown error'}`);
+      console.warn(`[-] [Resend] Failed: ${error?.message || 'Unknown error'}`);
     } catch (err) {
-      console.warn(`[-] [Resend] Exception sending to ${toEmail}: ${err.message}`);
+      console.warn(`[-] [Resend] Failed: ${err.message}`);
     }
   }
 
