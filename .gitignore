@@ -35,3 +35,8 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+all_codes.txt
+project-structure.txt
+export.js
+*.txt
