@@ -3,15 +3,14 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 let redisClient = null;
-
 const redisUrl = process.env.REDIS_URL;
 
-// Only attempt connecting if a real Redis URL is supplied (not placeholder)
 if (redisUrl && !redisUrl.includes('your_redis_password') && !redisUrl.includes('localhost:6379')) {
   try {
     redisClient = new Redis(redisUrl, {
+      tls: redisUrl.startsWith('rediss://') ? { rejectUnauthorized: false } : undefined,
       maxRetriesPerRequest: 1,
-      connectTimeout: 3000,
+      connectTimeout: 5000,
       enableReadyCheck: false,
       retryStrategy(times) {
         if (times > 2) {
