@@ -7,8 +7,10 @@ const redisUrl = process.env.REDIS_URL;
 
 if (redisUrl && !redisUrl.includes('your_redis_password') && !redisUrl.includes('localhost:6379')) {
   try {
+    const isSsl = redisUrl.startsWith('rediss://');
+
     redisClient = new Redis(redisUrl, {
-      tls: redisUrl.startsWith('rediss://') ? { rejectUnauthorized: false } : undefined,
+      tls: isSsl ? { rejectUnauthorized: false } : undefined,
       maxRetriesPerRequest: 1,
       connectTimeout: 5000,
       enableReadyCheck: false,
