@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import { User } from '../models/User.js';
 import { parseAndValidateIIITNR } from '../utils/collegeValidator.js';
-import { sendOtpEmail, sendPasswordResetEmail } from '../utils/email.js';
+import { sendPasswordResetEmail } from '../utils/email.js';
 
 function getGoogleClient() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -18,11 +18,9 @@ const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-  maxAge: 1 * 24 * 60 * 60 * 1000, // FIX: Changed to 1 day (was 7 days)
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days for CTF convenience
   path: '/',
 };
-
-const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 function publicUser(user) {
   return {
@@ -37,7 +35,17 @@ function publicUser(user) {
   };
 }
 
-// 1. REGISTER — creates verified user & logs them in immediately (No OTP required)
+function signAndSetCookie(res, user) {
+  const token = jwt.sign(
+    { id: user._id, role: user.role, email: user.email },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+  res.cookie('token', token, COOKIE_OPTIONS);
+  return token;
+}
+
+// 1. REGISTER — auto-verified + instant session (no OTP)
 export const register = async (req, res) => {
   const { name, email, password, branch, batchYear } = req.body;
 
@@ -57,7 +65,7 @@ export const register = async (req, res) => {
   }
 
   try {
-    let existingUser = await User.findOne({ email: validation.normalizedEmail });
+    const existingUser = await User.findOne({ email: validation.normalizedEmail });
 
     if (existingUser) {
       return res.status(400).json({
@@ -74,17 +82,10 @@ export const register = async (req, res) => {
       password: hashedPassword,
       branch: branch || 'CSE',
       batchYear: batchYear || '1st Year (Freshers)',
-      isVerified: true, // Auto-verified immediately
+      isVerified: true,
     });
 
-    // Generate login session token immediately
-    const token = jwt.sign(
-      { id: user._id, role: user.role, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    res.cookie('token', token, COOKIE_OPTIONS);
+    signAndSetCookie(res, user);
 
     return res.status(201).json({
       success: true,
@@ -99,7 +100,7 @@ export const register = async (req, res) => {
   }
 };
 
-// 2. VERIFY OTP — marks verified + issues session cookie
+// 2. VERIFY OTP — kept for compatibility, but optional now
 export const verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
 
@@ -115,12 +116,28 @@ export const verifyOtp = async (req, res) => {
       return res.status(404).json({ message: 'Account not found.' });
     }
 
+    // Already verified → just log them in
     if (user.isVerified) {
-      return res.status(400).json({ message: 'Account already verified. Please sign in.' });
+      signAndSetCookie(res, user);
+      return res.json({
+        success: true,
+        message: 'Already verified. Welcome back.',
+        user: publicUser(user),
+      });
     }
 
     if (!user.otpHash || !user.otpExpires || user.otpExpires < Date.now()) {
-      return res.status(400).json({ message: 'OTP expired. Please request a new code.' });
+      // No OTP flow anymore — auto-verify old accounts
+      user.isVerified = true;
+      user.otpHash = undefined;
+      user.otpExpires = undefined;
+      await user.save();
+      signAndSetCookie(res, user);
+      return res.json({
+        success: true,
+        message: 'Identity verified. Welcome, detective.',
+        user: publicUser(user),
+      });
     }
 
     const isMatch = await bcrypt.compare(String(otp).trim(), user.otpHash);
@@ -133,13 +150,7 @@ export const verifyOtp = async (req, res) => {
     user.otpExpires = undefined;
     await user.save();
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-
-    res.cookie('token', token, COOKIE_OPTIONS);
+    signAndSetCookie(res, user);
 
     return res.json({
       success: true,
@@ -154,51 +165,15 @@ export const verifyOtp = async (req, res) => {
   }
 };
 
-// 3. RESEND OTP
+// 3. RESEND OTP — no-op friendly response (OTP disabled)
 export const resendOtp = async (req, res) => {
-  const { email } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ message: 'Email is required.' });
-  }
-
-  try {
-    const normalized = email.trim().toLowerCase();
-    const user = await User.findOne({ email: normalized }).select('+otpHash +otpExpires');
-
-    // Same generic message whether user exists or not (no enumeration)
-    const generic = {
-      success: true,
-      message: 'If an unverified account exists, a new code has been sent.',
-    };
-
-    if (!user || user.isVerified) {
-      return res.json(generic);
-    }
-
-    const otp = generateOTP();
-    const salt = await bcrypt.genSalt(10);
-    user.otpHash = await bcrypt.hash(otp, salt);
-    user.otpExpires = Date.now() + 10 * 60 * 1000;
-    await user.save();
-
-    const emailResult = await sendOtpEmail(user.email, otp);
-
-    return res.json({
-      ...generic,
-      ...(process.env.NODE_ENV !== 'production' && !emailResult.sent
-        ? { devOtp: otp }
-        : {}),
-    });
-  } catch (error) {
-    console.error('[-] resendOtp error:', error.message);
-    return res.status(500).json({
-      message: process.env.NODE_ENV === 'production' ? 'Request failed.' : error.message,
-    });
-  }
+  return res.json({
+    success: true,
+    message: 'Email verification is disabled. Please sign in directly.',
+  });
 };
 
-// 4. LOGIN — blocks unverified; auto-sends OTP if needed
+// 4. LOGIN — no OTP gate; auto-verify old accounts
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -208,7 +183,7 @@ export const login = async (req, res) => {
 
   try {
     const normalized = email.trim().toLowerCase();
-    const user = await User.findOne({ email: normalized }).select('+password +otpHash +otpExpires');
+    const user = await User.findOne({ email: normalized }).select('+password');
 
     if (!user) {
       return res.status(401).json({ message: 'Invalid IIIT-NR email or password.' });
@@ -223,32 +198,15 @@ export const login = async (req, res) => {
       return res.status(403).json({ message: 'Account disqualified.' });
     }
 
+    // Auto-heal old unverified accounts (from previous OTP system)
     if (!user.isVerified) {
-      const otp = generateOTP();
-      const salt = await bcrypt.genSalt(10);
-      user.otpHash = await bcrypt.hash(otp, salt);
-      user.otpExpires = Date.now() + 10 * 60 * 1000;
+      user.isVerified = true;
+      user.otpHash = undefined;
+      user.otpExpires = undefined;
       await user.save();
-
-      const emailResult = await sendOtpEmail(user.email, otp);
-
-      return res.status(403).json({
-        requiresOtp: true,
-        email: user.email,
-        message: 'Email not verified. A new clearance code has been sent.',
-        ...(process.env.NODE_ENV !== 'production' && !emailResult.sent
-          ? { devOtp: otp }
-          : {}),
-      });
     }
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-
-    res.cookie('token', token, COOKIE_OPTIONS);
+    signAndSetCookie(res, user);
 
     return res.json({
       success: true,
@@ -333,14 +291,9 @@ export const resetPassword = async (req, res) => {
     user.password = await bcrypt.hash(newPassword, salt);
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
-    // Resetting password proves inbox access — mark verified
     user.isVerified = true;
     user.otpHash = undefined;
     user.otpExpires = undefined;
-
-    // FIX: Record the time the password changed to invalidate old JWTs
-    user.passwordChangedAt = Date.now(); 
-
     await user.save();
 
     res.clearCookie('token', { ...COOKIE_OPTIONS, maxAge: 0 });
@@ -370,7 +323,7 @@ export const logout = async (req, res) => {
   return res.json({ success: true, message: 'Logged out successfully.' });
 };
 
-// 9. GOOGLE SSO — auto-verified (Google already proved email ownership)
+// 9. GOOGLE SSO — auto-verified
 export const googleAuth = async (req, res) => {
   const { credential } = req.body;
 
@@ -413,7 +366,6 @@ export const googleAuth = async (req, res) => {
     let user = await User.findOne({ email }).select('+password');
 
     if (user) {
-      // Pre-account takeover fix: revoke any manual password
       const randomPassword = crypto.randomBytes(32).toString('hex');
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(randomPassword, salt);
@@ -421,7 +373,7 @@ export const googleAuth = async (req, res) => {
       user.otpHash = undefined;
       user.otpExpires = undefined;
       await user.save();
-      console.log(`[+] Google login (password revoked, verified): ${email}`);
+      console.log(`[+] Google login (verified): ${email}`);
     } else {
       const randomPassword = crypto.randomBytes(32).toString('hex');
       const salt = await bcrypt.genSalt(10);
@@ -433,7 +385,7 @@ export const googleAuth = async (req, res) => {
         password: hashedPassword,
         branch: 'CSE',
         batchYear: '1st Year (Freshers)',
-        isVerified: true, // Google verified
+        isVerified: true,
       });
 
       console.log(`[+] Created new Google user (verified): ${email}`);
@@ -443,13 +395,7 @@ export const googleAuth = async (req, res) => {
       return res.status(403).json({ message: 'Account disqualified.' });
     }
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-
-    res.cookie('token', token, COOKIE_OPTIONS);
+    signAndSetCookie(res, user);
 
     return res.json({
       success: true,
