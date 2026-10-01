@@ -37,7 +37,7 @@ function publicUser(user) {
   };
 }
 
-// 1. REGISTER — creates unverified user + sends OTP (no cookie yet)
+// 1. REGISTER — creates verified user & logs them in immediately (No OTP required)
 export const register = async (req, res) => {
   const { name, email, password, branch, batchYear } = req.body;
 
@@ -57,52 +57,39 @@ export const register = async (req, res) => {
   }
 
   try {
-    let user = await User.findOne({ email: validation.normalizedEmail }).select('+otpHash +otpExpires');
+    let existingUser = await User.findOne({ email: validation.normalizedEmail });
 
-    if (user && user.isVerified) {
+    if (existingUser) {
       return res.status(400).json({
         message: 'An account with this IIIT-NR email already exists. Please sign in.',
       });
     }
 
-    const otp = generateOTP();
     const salt = await bcrypt.genSalt(10);
-    const otpHash = await bcrypt.hash(otp, salt);
     const hashedPassword = await bcrypt.hash(password, salt);
-    const otpExpires = Date.now() + 10 * 60 * 1000; // 10 min
 
-    if (user && !user.isVerified) {
-      // Re-registration on unverified account — refresh credentials + OTP
-      user.name = name.trim();
-      user.password = hashedPassword;
-      user.branch = branch || 'CSE';
-      user.batchYear = batchYear || '1st Year (Freshers)';
-      user.otpHash = otpHash;
-      user.otpExpires = otpExpires;
-      await user.save();
-    } else {
-      user = await User.create({
-        name: name.trim(),
-        email: validation.normalizedEmail,
-        password: hashedPassword,
-        branch: branch || 'CSE',
-        batchYear: batchYear || '1st Year (Freshers)',
-        isVerified: false,
-        otpHash,
-        otpExpires,
-      });
-    }
+    const user = await User.create({
+      name: name.trim(),
+      email: validation.normalizedEmail,
+      password: hashedPassword,
+      branch: branch || 'CSE',
+      batchYear: batchYear || '1st Year (Freshers)',
+      isVerified: true, // Auto-verified immediately
+    });
 
-    const emailResult = await sendOtpEmail(user.email, otp);
+    // Generate login session token immediately
+    const token = jwt.sign(
+      { id: user._id, role: user.role, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.cookie('token', token, COOKIE_OPTIONS);
 
     return res.status(201).json({
       success: true,
-      requiresOtp: true,
-      email: user.email,
-      message: 'Clearance code sent to your university email.',
-      ...(process.env.NODE_ENV !== 'production' && !emailResult.sent
-        ? { devOtp: otp }
-        : {}),
+      message: 'Account created successfully! Welcome detective.',
+      user: publicUser(user),
     });
   } catch (error) {
     console.error('[-] register error:', error.message);
@@ -353,7 +340,7 @@ export const resetPassword = async (req, res) => {
 
     // FIX: Record the time the password changed to invalidate old JWTs
     user.passwordChangedAt = Date.now(); 
-    
+
     await user.save();
 
     res.clearCookie('token', { ...COOKIE_OPTIONS, maxAge: 0 });
