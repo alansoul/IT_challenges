@@ -3,21 +3,26 @@ import { Resend } from 'resend';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Provider 1: Gmail SMTP / Custom Transporter (increased timeouts for Railway -> Google cloud network)
+
+// Provider 1: Gmail SMTP / Custom Transporter (Port 465 Direct SSL for Cloud Hosts)
 function getSmtpTransporter() {
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const port = Number(process.env.SMTP_PORT) || 465;
+    const isSecure = process.env.SMTP_SECURE !== undefined
+      ? process.env.SMTP_SECURE === 'true'
+      : port === 465;
+
     return nodemailer.createTransport({
-      service: process.env.SMTP_SERVICE || 'gmail',
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === 'true', // true for 465, false for 587
+      port: port,
+      secure: isSecure, // true for 465 (Direct SSL), false for 587
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS, // 16-character Gmail App Password
       },
-      connectionTimeout: 15000, // 15s connection timeout
-      greetingTimeout: 15000,   // 15s greeting timeout
-      socketTimeout: 20000,     // 20s socket timeout
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000,
     });
   }
   return null;
