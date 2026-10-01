@@ -3,21 +3,21 @@ import { Resend } from 'resend';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Provider 1: Gmail SMTP / Custom Transporter with strict 3s connection timeouts
+// Provider 1: Gmail SMTP / Custom Transporter (increased timeouts for Railway -> Google cloud network)
 function getSmtpTransporter() {
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
     return nodemailer.createTransport({
       service: process.env.SMTP_SERVICE || 'gmail',
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: Number(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === 'true', // true for 465
+      secure: process.env.SMTP_SECURE === 'true', // true for 465, false for 587
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS, // 16-character Gmail App Password
       },
-      connectionTimeout: 3000, // 3s max timeout
-      greetingTimeout: 3000,
-      socketTimeout: 3000,
+      connectionTimeout: 15000, // 15s connection timeout
+      greetingTimeout: 15000,   // 15s greeting timeout
+      socketTimeout: 20000,     // 20s socket timeout
     });
   }
   return null;
@@ -28,17 +28,17 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 const FROM_RESEND = process.env.EMAIL_FROM || 'Cipher Cell CTF <onboarding@resend.dev>';
 
 /**
- * Universal Email Dispatcher with 3-Second Timeout Cap
+ * Universal Email Dispatcher with 20-Second Timeout Cap
  */
 async function dispatchEmail({ toEmail, subject, html, text }) {
   const smtp = getSmtpTransporter();
 
-  // --- Helper to race a promise against a 3.5s timeout ---
+  // Helper to race a promise against a 20s timeout
   const withTimeout = (promise, name) =>
     Promise.race([
       promise,
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`${name} connection timed out after 3.5s`)), 3500)
+        setTimeout(() => reject(new Error(`${name} connection timed out after 20s`)), 20000)
       ),
     ]);
 
