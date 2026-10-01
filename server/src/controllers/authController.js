@@ -18,7 +18,7 @@ const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-  maxAge: 7 * 24 * 60 * 60 * 1000,
+  maxAge: 1 * 24 * 60 * 60 * 1000, // FIX: Changed to 1 day (was 7 days)
   path: '/',
 };
 
@@ -149,7 +149,7 @@ export const verifyOtp = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '1d' }
     );
 
     res.cookie('token', token, COOKIE_OPTIONS);
@@ -258,7 +258,7 @@ export const login = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '1d' }
     );
 
     res.cookie('token', token, COOKIE_OPTIONS);
@@ -350,6 +350,10 @@ export const resetPassword = async (req, res) => {
     user.isVerified = true;
     user.otpHash = undefined;
     user.otpExpires = undefined;
+
+    // FIX: Record the time the password changed to invalidate old JWTs
+    user.passwordChangedAt = Date.now(); 
+    
     await user.save();
 
     res.clearCookie('token', { ...COOKIE_OPTIONS, maxAge: 0 });
@@ -455,7 +459,7 @@ export const googleAuth = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '1d' }
     );
 
     res.cookie('token', token, COOKIE_OPTIONS);

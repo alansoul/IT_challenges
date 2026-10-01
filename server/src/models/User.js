@@ -13,6 +13,9 @@ const userSchema = new mongoose.Schema(
     isDisqualified: { type: Boolean, default: false },
     lastSolveTime: { type: Date },
 
+    // Security: Invalidate old sessions if password resets
+    passwordChangedAt: { type: Date, select: false },
+
     // Email verification (OTP)
     isVerified: { type: Boolean, default: false },
     otpHash: { type: String, select: false },
