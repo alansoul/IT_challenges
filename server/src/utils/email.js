@@ -4,18 +4,18 @@ import dns from 'dns';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Force Node.js to resolve IPv4 first (prevents cloud provider IPv6 routing hangs)
+// Force Node.js DNS to resolve IPv4 first (prevents cloud provider IPv6 routing hangs)
 if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
 }
 
-// 1. Setup Resend (if key provided and domain verified)
+// 1. Setup Resend (Optional fallback)
 const resendApiKey = process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.trim() : null;
 const resend = resendApiKey && !resendApiKey.includes('your_') ? new Resend(resendApiKey) : null;
 const FROM_RESEND = process.env.EMAIL_FROM || 'Cipher Cell CTF <onboarding@resend.dev>';
 
-// 2. Setup Gmail / Custom SMTP Transporter
-function getTransporter() {
+// 2. Setup Local/Custom SMTP Transporter (Fallback for localhost)
+function getSmtpTransporter() {
   const user = process.env.SMTP_USER ? process.env.SMTP_USER.trim() : null;
   const pass = process.env.SMTP_PASS ? process.env.SMTP_PASS.trim() : null;
 
@@ -23,18 +23,16 @@ function getTransporter() {
 
   const host = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
 
-  // If using Gmail, use Nodemailer's built-in Gmail service (handles ports & SSL automatically)
   if (host.includes('gmail')) {
     return nodemailer.createTransport({
       service: 'gmail',
       auth: { user, pass },
-      connectionTimeout: 5000,
-      greetingTimeout: 5000,
-      socketTimeout: 5000,
+      connectionTimeout: 4000,
+      greetingTimeout: 4000,
+      socketTimeout: 4000,
     });
   }
 
-  // Custom SMTP configuration
   const port = Number(process.env.SMTP_PORT) || 465;
   const isSecure = process.env.SMTP_SECURE !== undefined
     ? process.env.SMTP_SECURE === 'true'
@@ -45,36 +43,74 @@ function getTransporter() {
     port,
     secure: isSecure,
     auth: { user, pass },
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
-    socketTimeout: 5000,
+    connectionTimeout: 4000,
+    greetingTimeout: 4000,
+    socketTimeout: 4000,
   });
 }
 
 /**
- * Universal Email Dispatcher
+ * Strategy 1: Brevo HTTPS REST API (Port 443)
+ * Never blocked by Railway; delivers to ANY student email without DNS verification.
  */
-async function dispatchEmail({ toEmail, subject, html, text }) {
-  // Strategy A: Try Gmail / SMTP (Allows sending to ANY @iiitnr.edu.in address without domain verification)
-  const transporter = getTransporter();
-  if (transporter) {
-    try {
-      const fromAddress = process.env.SMTP_FROM || `"Cipher Cell CTF" <${process.env.SMTP_USER}>`;
-      const info = await transporter.sendMail({
-        from: fromAddress,
-        to: toEmail,
-        subject,
-        text,
-        html,
-      });
-      console.log(`[+] [Email Delivered] Sent to ${toEmail} (Message ID: ${info.messageId})`);
-      return { sent: true, provider: 'smtp', messageId: info.messageId };
-    } catch (err) {
-      console.warn(`[-] [SMTP Delivery Failed]: ${err.message}`);
-    }
+async function sendViaBrevo({ toEmail, subject, html, text }) {
+  const apiKey = process.env.BREVO_API_KEY ? process.env.BREVO_API_KEY.trim() : null;
+  if (!apiKey || apiKey.includes('your_')) return null;
+
+  const senderEmail = (
+    process.env.BREVO_SENDER_EMAIL ||
+    process.env.SMTP_USER ||
+    ''
+  ).trim();
+
+  if (!senderEmail) {
+    console.warn('[-] [Brevo Notice] BREVO_SENDER_EMAIL is missing in environment variables.');
+    return null;
   }
 
-  // Strategy B: Try Resend API
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'api-key': apiKey,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: {
+        name: 'Cipher Cell CTF',
+        email: senderEmail,
+      },
+      to: [{ email: toEmail }],
+      subject,
+      htmlContent: html,
+      textContent: text,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || `Brevo HTTP error ${response.status}`);
+  }
+
+  console.log(`[+] [Brevo HTTPS Delivered] Sent to ${toEmail} (ID: ${data.messageId || 'OK'})`);
+  return { sent: true, provider: 'brevo', messageId: data.messageId };
+}
+
+/**
+ * Universal Email Dispatcher
+ * Priority: 1. Brevo HTTPS API -> 2. Resend API -> 3. SMTP -> 4. Server Console Log
+ */
+async function dispatchEmail({ toEmail, subject, html, text }) {
+  // --- 1. TRY BREVO REST API (HTTPS Port 443 - Fast & Unblocked) ---
+  try {
+    const brevoResult = await sendViaBrevo({ toEmail, subject, html, text });
+    if (brevoResult) return brevoResult;
+  } catch (err) {
+    console.warn(`[-] [Brevo API Error]: ${err.message}. Trying next provider...`);
+  }
+
+  // --- 2. TRY RESEND API ---
   if (resend) {
     try {
       const { data, error } = await resend.emails.send({
@@ -95,7 +131,26 @@ async function dispatchEmail({ toEmail, subject, html, text }) {
     }
   }
 
-  // Strategy C: Emergency Console Fallback (Never leaves user stranded)
+  // --- 3. TRY SMTP (Localhost only) ---
+  const smtp = getSmtpTransporter();
+  if (smtp) {
+    try {
+      const fromAddress = process.env.SMTP_FROM || `"Cipher Cell CTF" <${process.env.SMTP_USER}>`;
+      const info = await smtp.sendMail({
+        from: fromAddress,
+        to: toEmail,
+        subject,
+        text,
+        html,
+      });
+      console.log(`[+] [SMTP Delivered] Sent to ${toEmail} (ID: ${info.messageId})`);
+      return { sent: true, provider: 'smtp', messageId: info.messageId };
+    } catch (err) {
+      console.warn(`[-] [SMTP Blocked/Failed]: ${err.message}`);
+    }
+  }
+
+  // --- 4. EMERGENCY FALLBACK: LOG TO SERVER CONSOLE ---
   console.log(`\n================ EMAIL DISPATCH FALLBACK (CONSOLE LOG) ================`);
   console.log(`To:      ${toEmail}`);
   console.log(`Subject: ${subject}`);
@@ -109,7 +164,6 @@ async function dispatchEmail({ toEmail, subject, html, text }) {
  * Send password-reset link
  */
 export async function sendPasswordResetEmail(toEmail, resetToken) {
-  // Normalize URL to remove any trailing slashes
   const rawUrl = process.env.FRONTEND_URL || 'https://it-challenges.vercel.app';
   const cleanUrl = rawUrl.replace(/\/+$/, '');
   const resetLink = `${cleanUrl}/reset-password?token=${resetToken}`;
