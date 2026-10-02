@@ -1,5 +1,5 @@
 /**
- * Validates that the email belongs to IIIT-NR.
+ * Validates that the email belongs to IIIT-NR and rejects email aliases (+tag).
  * Branch and batch year come from the registration form — not from email guessing.
  */
 export function parseAndValidateIIITNR(email) {
@@ -12,6 +12,14 @@ export function parseAndValidateIIITNR(email) {
   // Basic shape check
   if (!normalized.includes('@') || normalized.length > 100) {
     return { isValid: false, error: 'Invalid email format.' };
+  }
+
+  // 🔴 ANTI-FARMING PATCH: Disallow email sub-addressing (+aliases like test+1@iiitnr.edu.in)
+  if (normalized.includes('+')) {
+    return {
+      isValid: false,
+      error: 'Email aliases containing "+" are not permitted. Please use your standard student address.',
+    };
   }
 
   const isIIITNR =

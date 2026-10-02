@@ -11,6 +11,7 @@ import authRoutes from './routes/authRoutes.js';
 import challengeRoutes from './routes/challengeRoutes.js';
 import leaderboardRoutes from './routes/leaderboardRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
+import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 
@@ -40,6 +41,20 @@ const PORT = process.env.PORT || 5000;
 
 // CRITICAL for Railway / Vercel cross-domain HTTPS cookies:
 app.set('trust proxy', 1);
+
+// Global Speed Limit: Max 120 requests per minute per IP address
+const globalApiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 120, // 120 requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    message: 'Too many requests from your network. Please slow down.',
+  },
+});
+
+// Protect all /api/ endpoints with the speed camera
+app.use('/api/', globalApiLimiter);
 
 // ─── Security headers (Helmet) ───────────────────────────────────────────
 // API server: sensible defaults + explicit hardened options

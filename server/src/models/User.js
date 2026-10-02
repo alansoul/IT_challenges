@@ -13,8 +13,18 @@ const userSchema = new mongoose.Schema(
     isDisqualified: { type: Boolean, default: false },
     lastSolveTime: { type: Date },
 
+    // Layer 7: Anomaly Detection flag for admin investigation
+    flaggedForReview: { type: Boolean, default: false },
+
     // Security: Invalidate old sessions if password resets
     passwordChangedAt: { type: Date, select: false },
+    lastSolveTime: { type: Date },
+
+    // Security: Invalidate old sessions if password resets
+    passwordChangedAt: { type: Date, select: false },
+
+    // The Ban Hammer: increment this number to kick the user out instantly
+    tokenVersion: { type: Number, default: 0, select: false },
 
     // Email verification (OTP)
     isVerified: { type: Boolean, default: false },
