@@ -1,24 +1,34 @@
 import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
+import dns from 'dns';
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Force Node.js DNS to prefer IPv4 (Fixes Railway ENETUNREACH IPv6 errors)
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
-// Provider 1: Gmail SMTP / Custom Transporter (Port 465 Direct SSL for Cloud Hosts)
+// Provider 1: Gmail / Custom SMTP Transporter (Forced IPv4)
 function getSmtpTransporter() {
-  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+  const user = process.env.SMTP_USER ? process.env.SMTP_USER.trim() : null;
+  const pass = process.env.SMTP_PASS ? process.env.SMTP_PASS.trim() : null;
+  const host = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
+
+  if (user && pass) {
     const port = Number(process.env.SMTP_PORT) || 465;
     const isSecure = process.env.SMTP_SECURE !== undefined
       ? process.env.SMTP_SECURE === 'true'
       : port === 465;
 
     return nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      host: host,
       port: port,
-      secure: isSecure, // true for 465 (Direct SSL), false for 587
+      secure: isSecure,
+      family: 4, // Force IPv4 to prevent Railway ENETUNREACH IPv6 errors
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS, // 16-character Gmail App Password
+        user: user,
+        pass: pass,
       },
       connectionTimeout: 15000,
       greetingTimeout: 15000,
@@ -28,17 +38,17 @@ function getSmtpTransporter() {
   return null;
 }
 
-// Provider 2: Resend API
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+// Provider 2: Resend API (Only active if a valid RESEND_API_KEY is provided)
+const resendApiKey = process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.trim() : null;
+const resend = resendApiKey && !resendApiKey.includes('your_') ? new Resend(resendApiKey) : null;
 const FROM_RESEND = process.env.EMAIL_FROM || 'Cipher Cell CTF <onboarding@resend.dev>';
 
 /**
- * Universal Email Dispatcher with 20-Second Timeout Cap
+ * Universal Email Dispatcher
  */
 async function dispatchEmail({ toEmail, subject, html, text }) {
   const smtp = getSmtpTransporter();
 
-  // Helper to race a promise against a 20s timeout
   const withTimeout = (promise, name) =>
     Promise.race([
       promise,

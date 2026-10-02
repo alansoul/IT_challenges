@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
 import api from '@/lib/api';
 
 export interface User {
@@ -40,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Verifies the session by querying /api/auth/me with the HttpOnly cookie
   const refreshUser = useCallback(async () => {
     try {
       const res = await api.get<{ user: User }>('/api/auth/me');
@@ -49,6 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Bootstrap session on initial mount
   useEffect(() => {
     let cancelled = false;
 
@@ -70,19 +71,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    try {
-      const res = await api.post<{ user: User }>('/api/auth/login', { email, password });
-      setUser(res.data.user);
-      router.push('/dashboard');
-    } catch (err: unknown) {
-      // Intercept the 403 unverified error and redirect to verify page automatically
-      if (axios.isAxiosError(err) && err.response?.data?.requiresOtp) {
-        const targetEmail = err.response.data.email || email;
-        router.push(`/verify?email=${encodeURIComponent(targetEmail)}`);
-        return; // Return early so we don't throw an error to the login page UI
-      }
-      throw err; // Throw real errors (like wrong password) back to the UI
-    }
+    const res = await api.post<{ user: User }>('/api/auth/login', { email, password });
+    setUser(res.data.user);
+    router.push('/dashboard');
   };
 
   const register = async (
@@ -92,22 +83,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     branch: string,
     batchYear: string
   ) => {
-    const res = await api.post<{ user?: User; requiresOtp?: boolean; email?: string }>(
-      '/api/auth/register',
-      { name, email, password, branch, batchYear }
-    );
-    
-    // Register returns 201 Created but sets requiresOtp
-    if (res.data.requiresOtp) {
-      const targetEmail = res.data.email || email;
-      router.push(`/verify?email=${encodeURIComponent(targetEmail)}`);
-      return;
-    }
-
-    if (res.data.user) {
-      setUser(res.data.user);
-      router.push('/dashboard');
-    }
+    const res = await api.post<{ user: User }>('/api/auth/register', {
+      name,
+      email,
+      password,
+      branch,
+      batchYear,
+    });
+    setUser(res.data.user);
+    router.push('/dashboard');
   };
 
   const googleLogin = async (credential: string) => {
@@ -120,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await api.post('/api/auth/logout');
     } catch {
-      // ignore
+      // Ignore network errors on logout to allow clean client-side exit
     } finally {
       setUser(null);
       router.push('/login');

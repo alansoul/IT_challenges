@@ -90,6 +90,7 @@ export const register = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: 'Account created successfully! Welcome detective.',
+      token, // <-- Send token in response
       user: publicUser(user),
     });
   } catch (error) {
@@ -210,6 +211,7 @@ export const login = async (req, res) => {
 
     return res.json({
       success: true,
+      signAndSetCookie: true,
       user: publicUser(user),
     });
   } catch (error) {
@@ -294,6 +296,10 @@ export const resetPassword = async (req, res) => {
     user.isVerified = true;
     user.otpHash = undefined;
     user.otpExpires = undefined;
+
+    // 🔴 ADD THIS LINE HERE:
+    user.passwordChangedAt = new Date();
+
     await user.save();
 
     res.clearCookie('token', { ...COOKIE_OPTIONS, maxAge: 0 });
@@ -399,6 +405,7 @@ export const googleAuth = async (req, res) => {
 
     return res.json({
       success: true,
+      token, // <-- Send token in response
       user: publicUser(user),
     });
   } catch (error) {

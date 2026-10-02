@@ -17,6 +17,8 @@ import {
   registerSchema,
   loginSchema,
   googleAuthSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
   verifyOtpSchema,
   resendOtpSchema,
 } from '../utils/validators.js';
@@ -30,8 +32,19 @@ router.post('/google', loginRateLimiter, validate(googleAuthSchema), googleAuth)
 router.post('/verify-otp', loginRateLimiter, validate(verifyOtpSchema), verifyOtp);
 router.post('/resend-otp', loginRateLimiter, validate(resendOtpSchema), resendOtp);
 
-router.post('/forgot-password', loginRateLimiter, forgotPassword);
-router.post('/reset-password', loginRateLimiter, resetPassword);
+router.post(
+  '/forgot-password',
+  loginRateLimiter,
+  validate(forgotPasswordSchema),
+  forgotPassword
+);
+
+router.post(
+  '/reset-password',
+  loginRateLimiter,
+  validate(resetPasswordSchema),
+  resetPassword
+);
 
 router.get('/me', requireAuth, getMe);
 router.post('/logout', logout);

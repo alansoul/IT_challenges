@@ -1,7 +1,19 @@
 import type { NextConfig } from "next";
 
+const backendUrl =
+  process.env.NODE_ENV === 'production'
+    ? 'https://itchallenges-production.up.railway.app'
+    : (process.env.BACKEND_URL || 'http://localhost:5000');
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
