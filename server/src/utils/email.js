@@ -4,84 +4,80 @@ import dns from 'dns';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Force Node.js DNS to prefer IPv4 (Fixes Railway ENETUNREACH IPv6 errors)
+// Force Node.js to resolve IPv4 first (prevents cloud provider IPv6 routing hangs)
 if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
 }
 
-// Provider 1: Gmail / Custom SMTP Transporter (Forced IPv4)
-function getSmtpTransporter() {
-  const user = process.env.SMTP_USER ? process.env.SMTP_USER.trim() : null;
-  const pass = process.env.SMTP_PASS ? process.env.SMTP_PASS.trim() : null;
-  const host = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
-
-  if (user && pass) {
-    const port = Number(process.env.SMTP_PORT) || 465;
-    const isSecure = process.env.SMTP_SECURE !== undefined
-      ? process.env.SMTP_SECURE === 'true'
-      : port === 465;
-
-    return nodemailer.createTransport({
-      host: host,
-      port: port,
-      secure: isSecure,
-      family: 4, // Force IPv4 to prevent Railway ENETUNREACH IPv6 errors
-      auth: {
-        user: user,
-        pass: pass,
-      },
-      connectionTimeout: 15000,
-      greetingTimeout: 15000,
-      socketTimeout: 20000,
-    });
-  }
-  return null;
-}
-
-// Provider 2: Resend API (Only active if a valid RESEND_API_KEY is provided)
+// 1. Setup Resend (if key provided and domain verified)
 const resendApiKey = process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.trim() : null;
 const resend = resendApiKey && !resendApiKey.includes('your_') ? new Resend(resendApiKey) : null;
 const FROM_RESEND = process.env.EMAIL_FROM || 'Cipher Cell CTF <onboarding@resend.dev>';
+
+// 2. Setup Gmail / Custom SMTP Transporter
+function getTransporter() {
+  const user = process.env.SMTP_USER ? process.env.SMTP_USER.trim() : null;
+  const pass = process.env.SMTP_PASS ? process.env.SMTP_PASS.trim() : null;
+
+  if (!user || !pass) return null;
+
+  const host = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
+
+  // If using Gmail, use Nodemailer's built-in Gmail service (handles ports & SSL automatically)
+  if (host.includes('gmail')) {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user, pass },
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 5000,
+    });
+  }
+
+  // Custom SMTP configuration
+  const port = Number(process.env.SMTP_PORT) || 465;
+  const isSecure = process.env.SMTP_SECURE !== undefined
+    ? process.env.SMTP_SECURE === 'true'
+    : port === 465;
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: isSecure,
+    auth: { user, pass },
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 5000,
+  });
+}
 
 /**
  * Universal Email Dispatcher
  */
 async function dispatchEmail({ toEmail, subject, html, text }) {
-  const smtp = getSmtpTransporter();
-
-  const withTimeout = (promise, name) =>
-    Promise.race([
-      promise,
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`${name} connection timed out after 20s`)), 20000)
-      ),
-    ]);
-
-  // --- 1. TRY GMAIL / CUSTOM SMTP FIRST ---
-  if (smtp) {
+  // Strategy A: Try Gmail / SMTP (Allows sending to ANY @iiitnr.edu.in address without domain verification)
+  const transporter = getTransporter();
+  if (transporter) {
     try {
       const fromAddress = process.env.SMTP_FROM || `"Cipher Cell CTF" <${process.env.SMTP_USER}>`;
-      const info = await withTimeout(
-        smtp.sendMail({
-          from: fromAddress,
-          to: toEmail,
-          subject,
-          text,
-          html,
-        }),
-        'SMTP'
-      );
-      console.log(`[+] [SMTP] Email delivered to ${toEmail} (id: ${info.messageId})`);
+      const info = await transporter.sendMail({
+        from: fromAddress,
+        to: toEmail,
+        subject,
+        text,
+        html,
+      });
+      console.log(`[+] [Email Delivered] Sent to ${toEmail} (Message ID: ${info.messageId})`);
       return { sent: true, provider: 'smtp', messageId: info.messageId };
     } catch (err) {
-      console.warn(`[-] [SMTP] Failed: ${err.message}. Trying Resend fallback...`);
+      console.warn(`[-] [SMTP Delivery Failed]: ${err.message}`);
     }
   }
 
-  // --- 2. TRY RESEND API SECOND ---
+  // Strategy B: Try Resend API
   if (resend) {
     try {
-      const resendPromise = resend.emails.send({
+      const { data, error } = await resend.emails.send({
         from: FROM_RESEND,
         to: toEmail,
         subject,
@@ -89,19 +85,17 @@ async function dispatchEmail({ toEmail, subject, html, text }) {
         text,
       });
 
-      const { data, error } = await withTimeout(resendPromise, 'Resend API');
-
       if (!error && data) {
-        console.log(`[+] [Resend] Email delivered to ${toEmail} (id: ${data.id})`);
+        console.log(`[+] [Resend Delivered] Sent to ${toEmail} (ID: ${data.id})`);
         return { sent: true, provider: 'resend', id: data.id };
       }
-      console.warn(`[-] [Resend] Failed: ${error?.message || 'Unknown error'}`);
+      console.warn(`[-] [Resend Notice]: ${error?.message || 'Unknown error'}`);
     } catch (err) {
-      console.warn(`[-] [Resend] Failed: ${err.message}`);
+      console.warn(`[-] [Resend Error]: ${err.message}`);
     }
   }
 
-  // --- 3. EMERGENCY FALLBACK: LOG TO SERVER CONSOLE ---
+  // Strategy C: Emergency Console Fallback (Never leaves user stranded)
   console.log(`\n================ EMAIL DISPATCH FALLBACK (CONSOLE LOG) ================`);
   console.log(`To:      ${toEmail}`);
   console.log(`Subject: ${subject}`);
@@ -112,41 +106,13 @@ async function dispatchEmail({ toEmail, subject, html, text }) {
 }
 
 /**
- * Send 6-digit OTP for email verification
- */
-export async function sendOtpEmail(toEmail, otp) {
-  const subject = `[CIPHER CELL] ${otp} is your clearance code`;
-
-  const html = `
-    <div style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#0c1017; color:#e6edf3; padding:32px; border-radius:12px; border:1px solid #21262d;">
-      <h2 style="color:#ff2a2a; margin:0 0 8px;">Murder Mystery 2.0</h2>
-      <p style="color:#a0aec0; font-size:12px; margin:0 0 24px;">CIPHER CELL CTF · Detective Clearance</p>
-      <p style="font-size:14px; line-height:1.6;">
-        Your one-time clearance code for
-        <strong style="color:#fff;">${toEmail}</strong>:
-      </p>
-      <div style="margin:24px 0; background:#161b22; border:1px solid #30363d; border-radius:8px; padding:16px 24px; display:inline-block;">
-        <span style="font-size:32px; font-weight:bold; letter-spacing:12px; color:#ffffff;">${otp}</span>
-      </div>
-      <p style="font-size:13px; color:#9ca3af;">Expires in <strong style="color:#ff2a2a;">10 minutes</strong>. Do not share this code.</p>
-      <p style="font-size:11px; color:#6b7280; margin-top:24px; border-top:1px solid #21262d; padding-top:16px;">
-        If you did not request this, ignore this email.
-      </p>
-    </div>
-  `;
-
-  const text = `CIPHER CELL CTF — Clearance Code\n\nYour OTP: ${otp}\nExpires in 10 minutes.\n\nIf you did not request this, ignore this email.`;
-
-  const result = await dispatchEmail({ toEmail, subject, html, text });
-  return { ...result, otp };
-}
-
-/**
  * Send password-reset link
  */
 export async function sendPasswordResetEmail(toEmail, resetToken) {
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-  const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
+  // Normalize URL to remove any trailing slashes
+  const rawUrl = process.env.FRONTEND_URL || 'https://it-challenges.vercel.app';
+  const cleanUrl = rawUrl.replace(/\/+$/, '');
+  const resetLink = `${cleanUrl}/reset-password?token=${resetToken}`;
 
   const subject = 'CIPHER CELL CTF — Password Reset Token';
 
@@ -166,7 +132,7 @@ export async function sendPasswordResetEmail(toEmail, resetToken) {
       <p style="font-size:11px; color:#6b7280; margin-top:24px; border-top:1px solid #21262d; padding-top:16px;">
         If you did not request this, ignore this email.
         <br/><br/>
-        Or paste manually:<br/>
+        Or paste this link into your browser:<br/>
         <span style="color:#9ca3af; word-break:break-all;">${resetLink}</span>
       </p>
     </div>
@@ -178,6 +144,7 @@ CIPHER CELL CTF — Password Reset
 Account: ${toEmail}
 Expires in 15 minutes.
 
+Reset Link:
 ${resetLink}
 
 If you did not request this, ignore this email.
@@ -185,4 +152,30 @@ If you did not request this, ignore this email.
 
   const result = await dispatchEmail({ toEmail, subject, html, text });
   return { ...result, previewUrl: resetLink };
+}
+
+/**
+ * Send 6-digit OTP (Optional)
+ */
+export async function sendOtpEmail(toEmail, otp) {
+  const subject = `[CIPHER CELL] ${otp} is your clearance code`;
+
+  const html = `
+    <div style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#0c1017; color:#e6edf3; padding:32px; border-radius:12px; border:1px solid #21262d;">
+      <h2 style="color:#ff2a2a; margin:0 0 8px;">Murder Mystery 2.0</h2>
+      <p style="color:#a0aec0; font-size:12px; margin:0 0 24px;">CIPHER CELL CTF · Detective Clearance</p>
+      <p style="font-size:14px; line-height:1.6;">
+        Your one-time clearance code for
+        <strong style="color:#fff;">${toEmail}</strong>:
+      </p>
+      <div style="margin:24px 0; background:#161b22; border:1px solid #30363d; border-radius:8px; padding:16px 24px; display:inline-block;">
+        <span style="font-size:32px; font-weight:bold; letter-spacing:12px; color:#ffffff;">${otp}</span>
+      </div>
+      <p style="font-size:13px; color:#9ca3af;">Expires in <strong style="color:#ff2a2a;">10 minutes</strong>.</p>
+    </div>
+  `;
+
+  const text = `CIPHER CELL CTF — Clearance Code\n\nYour OTP: ${otp}\nExpires in 10 minutes.`;
+  const result = await dispatchEmail({ toEmail, subject, html, text });
+  return { ...result, otp };
 }
