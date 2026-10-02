@@ -56,6 +56,7 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // 1. Initial Load & Route Protection
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!authLoading) {
@@ -70,6 +71,18 @@ export default function DashboardPage() {
 
     return () => clearTimeout(timer);
   }, [user, authLoading, router, fetchChallenges, fetchLeaderboard]);
+
+  // 2. High-Efficiency Polling: Refresh leaderboard every 30 seconds
+  // (Provides live rank updates to 700 students without overloading MongoDB or Redis)
+  useEffect(() => {
+    if (!user) return;
+
+    const interval = setInterval(() => {
+      void fetchLeaderboard();
+    }, 30000); // 30,000 ms = 30 seconds
+
+    return () => clearInterval(interval);
+  }, [user, fetchLeaderboard]);
 
   const submitFlag = async (challengeId: string) => {
     const flag = flags[challengeId];

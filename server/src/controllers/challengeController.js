@@ -118,6 +118,9 @@ export const submitFlag = async (req, res) => {
       const tieBreaker = 1 - Date.now() / 1e13;
       const redisScore = updatedUser.score + tieBreaker;
       await redis.zadd('leaderboard', redisScore, userId.toString());
+
+       // ⚡ Instantly bust the 10-second cache so new ranks reflect immediately!
+      await redis.del('leaderboard:cached_json');
     }
 
     return res.json({
