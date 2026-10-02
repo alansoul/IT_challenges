@@ -37,12 +37,17 @@ function publicUser(user) {
 
 function signAndSetCookie(res, user) {
   const token = jwt.sign(
-    { id: user._id, role: user.role, email: user.email },
+    { 
+      id: user._id, 
+      role: user.role, 
+      email: user.email,
+      tokenVersion: user.tokenVersion ?? 0 // Embed current version
+    },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
   res.cookie('token', token, COOKIE_OPTIONS);
-  return token;
+  return token;  
 }
 
 // 1. REGISTER — auto-verified + instant session (no OTP)
@@ -85,7 +90,8 @@ export const register = async (req, res) => {
       isVerified: true,
     });
 
-    signAndSetCookie(res, user);
+
+     const token = signAndSetCookie(res, user);
 
     return res.status(201).json({
       success: true,
@@ -119,10 +125,11 @@ export const verifyOtp = async (req, res) => {
 
     // Already verified → just log them in
     if (user.isVerified) {
-      signAndSetCookie(res, user);
+      const token = signAndSetCookie(res, user);
       return res.json({
         success: true,
         message: 'Already verified. Welcome back.',
+        token,
         user: publicUser(user),
       });
     }
@@ -151,11 +158,12 @@ export const verifyOtp = async (req, res) => {
     user.otpExpires = undefined;
     await user.save();
 
-    signAndSetCookie(res, user);
+    const token = signAndSetCookie(res, user);
 
     return res.json({
       success: true,
       message: 'Identity verified. Welcome, detective.',
+      token,
       user: publicUser(user),
     });
   } catch (error) {
@@ -207,11 +215,12 @@ export const login = async (req, res) => {
       await user.save();
     }
 
-    signAndSetCookie(res, user);
+    const token = signAndSetCookie(res, user);
 
     return res.json({
       success: true,
       signAndSetCookie: true,
+      token,
       user: publicUser(user),
     });
   } catch (error) {
@@ -401,11 +410,12 @@ export const googleAuth = async (req, res) => {
       return res.status(403).json({ message: 'Account disqualified.' });
     }
 
-    signAndSetCookie(res, user);
+    // 🔴 Fixed: Captured into const token
+    const token = signAndSetCookie(res, user);
 
     return res.json({
       success: true,
-      token, // <-- Send token in response
+      token,
       user: publicUser(user),
     });
   } catch (error) {
