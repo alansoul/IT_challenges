@@ -3,50 +3,52 @@ import { User } from '../models/User.js';
 
 export const getLeaderboard = async (req, res) => {
   try {
-    // 1. Redis sorted set path
+    let rankedUserIds = [];
+
+    // 1. Fetch player IDs who solved challenges from Redis (ordered by score + tiebreaker)
     if (redis && redis.status === 'ready') {
       try {
-        const rawRanks = await redis.zrevrange('leaderboard', 0, 49, 'WITHSCORES');
-
+        const rawRanks = await redis.zrevrange('leaderboard', 0, 49);
         if (rawRanks && rawRanks.length > 0) {
-          const userIds = [];
-          for (let i = 0; i < rawRanks.length; i += 2) {
-            userIds.push(rawRanks[i]);
-          }
-
-          // Fetch only players, exclude disqualified users, scrub emails for privacy
-          const users = await User.find({
-            _id: { $in: userIds },
-            role: 'player',
-            isDisqualified: { $ne: true },
-          })
-            .select('name score branch')
-            .lean();
-
-          const userMap = new Map(users.map((u) => [u._id.toString(), u]));
-          const leaderboard = userIds.map((id) => userMap.get(id)).filter(Boolean);
-
-          // If Redis has ranked players, return them
-          if (leaderboard.length > 0) {
-            return res.json(leaderboard);
-          }
+          rankedUserIds = rawRanks;
         }
       } catch (redisErr) {
-        console.warn('[-] Redis query failed, falling back to MongoDB:', redisErr.message);
+        console.warn('[-] Redis query failed:', redisErr.message);
       }
     }
 
-    // 2. MongoDB Path: Returns ALL registered players (including 0-point users)
+    // 2. Fetch all valid players from MongoDB
     const allPlayers = await User.find({
       role: 'player',
       isDisqualified: { $ne: true },
     })
-      .sort({ score: -1, createdAt: 1 }) // Sorted by score descending, then by signup order
-      .limit(50)
-      .select('name score branch')
+      .select('name score branch createdAt')
       .lean();
 
-    return res.json(allPlayers || []);
+    // Fast O(1) lookup map
+    const playerMap = new Map(allPlayers.map((p) => [p._id.toString(), p]));
+
+    const leaderboard = [];
+    const seenIds = new Set();
+
+    // 3. Add players with solves first (in exact Redis tiebreaker order)
+    for (const id of rankedUserIds) {
+      const player = playerMap.get(id);
+      if (player) {
+        leaderboard.push(player);
+        seenIds.add(id);
+      }
+    }
+
+    // 4. Append all remaining registered detectives (0 points), ordered by signup date
+    const remainingPlayers = allPlayers
+      .filter((p) => !seenIds.has(p._id.toString()))
+      .sort((a, b) => (b.score || 0) - (a.score || 0) || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    leaderboard.push(...remainingPlayers);
+
+    // Return top 50 detectives
+    return res.json(leaderboard.slice(0, 50));
   } catch (err) {
     console.error('[-] Error in getLeaderboard:', err);
     return res.status(500).json({ message: 'Failed to fetch leaderboard' });
