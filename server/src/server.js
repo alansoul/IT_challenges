@@ -42,14 +42,15 @@ const PORT = process.env.PORT || 5000;
 // CRITICAL for Railway / Vercel cross-domain HTTPS cookies:
 app.set('trust proxy', 1);
 
-// Global Speed Limit: Max 120 requests per minute per IP address
+// High-Capacity Campus Wi-Fi Limiter:
+// Allows 5,000 requests/min so 700 students sharing 1 campus IP don't get blocked
 const globalApiLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 120, // 120 requests per minute
+  windowMs: 60 * 1000,
+  max: 5000, // Raised from 120 to 5000
   standardHeaders: true,
   legacyHeaders: false,
   message: {
-    message: 'Too many requests from your network. Please slow down.',
+    message: 'High traffic detected from your campus network. Please wait a moment.',
   },
 });
 
